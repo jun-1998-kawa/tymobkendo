@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node tools/schema-authz-guard.cjs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

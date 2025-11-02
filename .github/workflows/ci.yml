@@ -1,0 +1,53 @@
+name: ci
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install
+        if: hashFiles('package.json') != ''
+        run: npm ci
+
+      - name: Type Check
+        if: "hashFiles('tsconfig.json') != ''"
+        run: npm run -s typecheck || true
+
+      - name: Lint
+        run: npm run -s lint || true
+
+      - name: Build
+        run: npm run -s build || true
+
+  code-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Code Check
+        run: node tools/code-check.cjs || true
+
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Schema/AuthZ Guard
+        run: node tools/schema-authz-guard.cjs

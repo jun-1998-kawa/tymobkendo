@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node tools/schema-authz-guard.cjs:*)"
+      "Bash(node tools/schema-authz-guard.cjs:*)",
+      "WebSearch",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

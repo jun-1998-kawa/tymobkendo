@@ -10,10 +10,10 @@ export const auth = defineAuth({
       mutable: true,
       required: true,
     },
-    // カスタム属性：卒業年度
-    graduationYear: {
-      dataType: "String",
+    // 標準属性：プロフィール（卒業年度などを入れる）
+    profile: {
       mutable: true,
+      required: false,
     },
   },
   groups: ["MEMBERS", "ADMINS"],

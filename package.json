@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sandbox": "npx ampx sandbox",
+    "sandbox:kendo-ob": "cross-env AWS_PROFILE=kendo-ob npx ampx sandbox",
+    "sandbox:delete": "npx ampx sandbox delete"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.6.3",
@@ -26,6 +29,7 @@
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
     "autoprefixer": "^10.4.21",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-config-next": "^15.1.3",
     "postcss": "^8.5.6",

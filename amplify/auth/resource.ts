@@ -5,15 +5,13 @@ export const auth = defineAuth({
     email: true,
   },
   userAttributes: {
-    // 標準属性：名前
     name: {
       mutable: true,
       required: true,
     },
-    // カスタム属性：卒業年度（西暦4桁）
-    graduationYear: {
-      dataType: "String",
+    birthdate: {
       mutable: true,
+      required: false,
     },
   },
   groups: ["MEMBERS", "ADMINS"],

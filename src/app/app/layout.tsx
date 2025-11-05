@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function MembersLayout({ children }: { children: React.ReactNode }) {
   return (
     <Authenticator
-      signUpAttributes={["name", "custom:graduationYear"]}
+      signUpAttributes={["name", "birthdate"]}
       formFields={{
         signUp: {
           name: {
@@ -14,9 +14,9 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
             isRequired: true,
             order: 1,
           },
-          "custom:graduationYear": {
-            label: "卒業年度（西暦）",
-            placeholder: "2020",
+          birthdate: {
+            label: "卒業年度",
+            placeholder: "2020-03-31",
             isRequired: false,
             order: 2,
           },

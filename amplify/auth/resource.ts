@@ -10,12 +10,10 @@ export const auth = defineAuth({
       mutable: true,
       required: true,
     },
-    // カスタム属性：卒業年度（"custom:"プレフィックスなし）
+    // カスタム属性：卒業年度
     graduationYear: {
       dataType: "String",
       mutable: true,
-      minLen: 4,
-      maxLen: 4,
     },
   },
   groups: ["MEMBERS", "ADMINS"],

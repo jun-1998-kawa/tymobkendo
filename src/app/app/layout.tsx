@@ -4,42 +4,7 @@ import Link from "next/link";
 
 export default function MembersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Authenticator
-      signUpAttributes={["name", "birthdate"]}
-      formFields={{
-        signUp: {
-          name: {
-            label: "名前",
-            placeholder: "山田 太郎",
-            isRequired: true,
-            order: 1,
-          },
-          birthdate: {
-            label: "卒業年度",
-            placeholder: "2020-03-31",
-            isRequired: false,
-            order: 2,
-          },
-          email: {
-            label: "メールアドレス",
-            placeholder: "email@example.com",
-            isRequired: true,
-            order: 3,
-          },
-          password: {
-            label: "パスワード",
-            placeholder: "パスワードを入力",
-            isRequired: true,
-            order: 4,
-          },
-          confirm_password: {
-            label: "パスワード（確認）",
-            placeholder: "パスワードを再入力",
-            order: 5,
-          },
-        },
-      }}
-    >
+    <Authenticator>
       {({ signOut, user }) => (
         <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
           <header style={{

@@ -10,8 +10,8 @@ export const auth = defineAuth({
       mutable: true,
       required: true,
     },
-    // カスタム属性：卒業年度
-    "custom:graduationYear": {
+    // カスタム属性：卒業年度（"custom:"プレフィックスなし）
+    graduationYear: {
       dataType: "String",
       mutable: true,
       minLen: 4,

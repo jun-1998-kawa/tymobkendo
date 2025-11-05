@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "sandbox": "npx ampx sandbox",
     "sandbox:kendo-ob": "cross-env AWS_PROFILE=kendo-ob npx ampx sandbox",
+    "sandbox:env": "cross-env npx ampx sandbox",
     "sandbox:delete": "npx ampx sandbox delete"
   },
   "dependencies": {

@@ -5,8 +5,12 @@ frontend:
       commands:
         - nvm install 20
         - nvm use 20
-        # Install with optional dependencies explicitly included
+        # Install build tools for native modules
+        - yum install -y python3 make gcc-c++
+        # Install with optional dependencies
         - npm ci --include=optional
+        # Force rebuild native modules
+        - npm rebuild
         # Deploy Amplify backend (Auth, Data, Storage)
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
     build:
@@ -18,5 +22,4 @@ frontend:
       - "**/*"
   cache:
     paths:
-      - node_modules/**/*
       - .next/cache/**/*

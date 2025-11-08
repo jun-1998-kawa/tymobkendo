@@ -47,7 +47,7 @@ export default function NewsSection() {
           setNewsList(sorted);
           setLoading(false);
         },
-        error: (err) => {
+        error: (err: any) => {
           console.error("Error fetching news:", err);
           const errorMessage = err?.message || err?.toString() || "ニュースの取得に失敗しました";
           setError(errorMessage);

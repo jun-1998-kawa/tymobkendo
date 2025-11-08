@@ -5,6 +5,7 @@ import { generateClient } from "aws-amplify/data";
 import { getUrl } from "aws-amplify/storage";
 import { Amplify } from "aws-amplify";
 import Link from "next/link";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
@@ -206,12 +207,15 @@ export default function NewsDetailPage() {
                 {imageUrls.map((url, index) => (
                   <div
                     key={index}
-                    className="overflow-hidden rounded-2xl border border-primary-200 shadow-lg transition-all hover:shadow-2xl"
+                    className="relative overflow-hidden rounded-2xl border border-primary-200 shadow-lg transition-all hover:shadow-2xl"
+                    style={{ minHeight: '300px' }}
                   >
-                    <img
+                    <Image
                       src={url}
                       alt={`${news.title} - 画像 ${index + 1}`}
-                      className="h-auto w-full object-cover"
+                      fill
+                      className="object-cover"
+                      unoptimized
                     />
                   </div>
                 ))}
@@ -226,7 +230,6 @@ export default function NewsDetailPage() {
             <div className="rounded-2xl border border-primary-200 bg-white p-8 shadow-lg md:p-12">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                className="markdown-content"
                 components={{
                   h1: ({ children }) => (
                     <h1 className="mb-4 mt-8 font-serif text-3xl font-bold text-primary-800 first:mt-0">

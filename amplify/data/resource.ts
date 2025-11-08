@@ -71,6 +71,24 @@ const schema = a.schema({
       allow.groups(["MEMBERS"]).to(["read"]), // 会員限定はisPublic=falseでUI側制御
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
+
+  // ニュース・お知らせ（公開ページで表示）
+  News: a
+    .model({
+      title: a.string().required(),
+      excerpt: a.string().required(), // 一覧表示用の要約
+      content: a.string().required(), // Markdown対応本文
+      category: a.string().required(), // お知らせ、イベント、活動報告など
+      publishedAt: a.datetime(),
+      isPublished: a.boolean().default(false),
+      isPinned: a.boolean().default(false),
+      imagePaths: a.string().array(), // 画像パスの配列
+    })
+    .authorization((allow) => [
+      allow.guest().to(["read"]), // 公開ページで誰でも閲覧可能
+      allow.authenticated().to(["read"]),
+      allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

@@ -10,7 +10,7 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
-import outputs from "../../../amplify_outputs.json";
+import outputs from "../../../../amplify_outputs.json";
 
 export default function NewsDetailPage() {
   const params = useParams();

@@ -3,9 +3,49 @@ import { Authenticator } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Authenticator form fields configuration
+const formFields = {
+  signUp: {
+    name: {
+      order: 1,
+      placeholder: "山田 太郎",
+      label: "氏名",
+      isRequired: true,
+    },
+    "custom:graduationYear": {
+      order: 2,
+      placeholder: "2020",
+      label: "卒業年度",
+      isRequired: false,
+      type: "number",
+    },
+    email: {
+      order: 3,
+      placeholder: "example@example.com",
+      label: "メールアドレス",
+      isRequired: true,
+    },
+    password: {
+      order: 4,
+      label: "パスワード",
+      placeholder: "パスワードを入力",
+      isRequired: true,
+    },
+    confirm_password: {
+      order: 5,
+      label: "パスワード（確認）",
+      placeholder: "パスワードを再入力",
+      isRequired: true,
+    },
+  },
+};
+
 export default function MembersLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Authenticator>
+    <Authenticator
+      formFields={formFields}
+      signUpAttributes={["name", "custom:graduationYear"]}
+    >
       {({ signOut, user }) => (
         <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">
           <Header signOut={signOut} userEmail={user?.signInDetails?.loginId} />

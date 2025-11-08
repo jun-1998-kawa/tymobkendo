@@ -50,7 +50,7 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
   return (
     <Authenticator
       formFields={formFields}
-      signUpAttributes={["given_name", "family_name", "custom:graduationYear"]}
+      signUpAttributes={["given_name", "family_name", "custom:graduationYear"] as any}
     >
       {({ signOut, user }) => (
         <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">

@@ -3,14 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - nvm install 20
-        - nvm use 20
-        # Install build tools for native modules
-        - yum install -y python3 make gcc-c++
-        # Install with optional dependencies
-        - npm ci --include=optional
-        # Force rebuild native modules
-        - npm rebuild
+        - nvm install
+        - nvm use
+        # Install dependencies (prebuilt binaries for native modules are downloaded automatically)
+        - npm ci
         # Deploy Amplify backend (Auth, Data, Storage)
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
     build:

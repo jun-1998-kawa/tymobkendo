@@ -5,18 +5,4 @@ export const auth = defineAuth({
     email: true,
   },
   groups: ["MEMBERS", "ADMINS"],
-  userAttributes: {
-    givenName: {
-      required: true,
-      mutable: true,
-    },
-    familyName: {
-      required: true,
-      mutable: true,
-    },
-    "custom:graduationYear": {
-      dataType: "Number",
-      mutable: true,
-    },
-  },
 });

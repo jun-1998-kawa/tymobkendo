@@ -5,8 +5,8 @@ frontend:
       commands:
         - nvm install
         - nvm use
-        # Install dependencies (prebuilt binaries for native modules are downloaded automatically)
-        - npm ci
+        # Install dependencies including optional platform-specific packages
+        - npm ci --include=optional
         # Deploy Amplify backend (Auth, Data, Storage)
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
     build:

@@ -2,7 +2,7 @@
 import "@aws-amplify/ui-react/styles.css";
 import { ThemeProvider, Authenticator } from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
-import outputs from "@/amplify_outputs.json";
+import outputs from "../../amplify_outputs.json";
 
 // Configure Amplify immediately
 Amplify.configure(outputs, { ssr: true });

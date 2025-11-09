@@ -80,9 +80,9 @@ export default function ThreadPage() {
       for (const file of Array.from(files)) {
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(7);
-        const fileName = `board/${timestamp}-${randomStr}-${file.name}`;
+        const fileName = `board-${timestamp}-${randomStr}-${file.name}`;
 
-        // members/{entity_id}/ パスを使用
+        // members/{entity_id}/ パスを使用（2階層まで）
         await uploadData({
           path: `members/${currentUserId}/${fileName}`,
           data: file,

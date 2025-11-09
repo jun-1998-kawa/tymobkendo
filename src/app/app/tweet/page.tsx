@@ -91,9 +91,9 @@ export default function TweetPage() {
       for (const file of Array.from(files)) {
         const timestamp = Date.now();
         const randomStr = Math.random().toString(36).substring(7);
-        const fileName = `tweets/${timestamp}-${randomStr}-${file.name}`;
+        const fileName = `tweet-${timestamp}-${randomStr}-${file.name}`;
 
-        // members/{entity_id}/ パスを使用（自動的に現在のユーザーIDに解決される）
+        // members/{entity_id}/ パスを使用（2階層まで）
         await uploadData({
           path: `members/${currentUserId}/${fileName}`,
           data: file,

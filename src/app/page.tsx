@@ -1,13 +1,28 @@
 "use client";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { generateClient } from "aws-amplify/data";
+import { getUrl } from "aws-amplify/storage";
 import HeroSlideshow from "@/components/ui/HeroSlideshow";
 import NewsSection from "@/components/NewsSection";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
+import ShinaiSlash from "@/components/ShinaiSlash";
 
-const heroSlides = [
+const client = generateClient();
+const models = client.models as any;
+
+type SiteConfig = any;
+type Feature = {
+  icon: string;
+  title: string;
+  description: string;
+};
+
+// デフォルトのコンテンツ（フォールバック用）
+const defaultHeroSlides = [
   {
     image: "/kosha.jpg",
     title: "戸山高校剣道部OB会",
@@ -15,9 +30,127 @@ const heroSlides = [
   },
 ];
 
+const defaultWelcome = {
+  title: "ようこそ",
+  body: "戸山高校剣道部OB会の公式サイトへようこそ。\nこのサイトは、OB会員の皆様が交流し、思い出を共有し、\n母校剣道部の伝統を次世代へ繋いでいくための場所です。",
+};
+
+const defaultFeatures: Feature[] = [
+  {
+    icon: "💬",
+    title: "近況投稿",
+    description: "140文字で気軽に近況を共有。会員同士のコミュニケーションを活性化します。",
+  },
+  {
+    icon: "📋",
+    title: "掲示板",
+    description: "スレッド形式でディスカッション。重要な情報はピン留めで常に上位表示。",
+  },
+  {
+    icon: "📜",
+    title: "歴史アーカイブ",
+    description: "戸山高校剣道部の歴史を振り返る。公開情報と会員限定情報を管理。",
+  },
+];
+
+const defaultCTA = {
+  title: "会員の皆様へ",
+  body: "ログインして、懐かしい仲間との交流をお楽しみください。\n戸山剣道部の思い出を共有し、絆を深めましょう。",
+};
+
+const defaultFooter = {
+  copyright: "© 2024 戸山高校剣道部OB会. All rights reserved.",
+};
+
 export default function Home() {
+  const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
+  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const loadSiteConfig = async () => {
+      try {
+        const { data: configs } = await models.SiteConfig.list({
+          filter: { isActive: { eq: true } },
+          limit: 1,
+        });
+
+        if (configs && configs.length > 0) {
+          const config = configs[0];
+          setSiteConfig(config);
+
+          // featuresJsonをパース
+          if (config.featuresJson) {
+            try {
+              const parsedFeatures = JSON.parse(config.featuresJson);
+              setFeatures(parsedFeatures);
+            } catch (e) {
+              console.error("Failed to parse featuresJson:", e);
+            }
+          }
+
+          // ヒーロー画像のURL取得
+          if (config.heroImagePath) {
+            try {
+              const url = await getUrl({
+                path: `public/${config.heroImagePath}`,
+              });
+              setHeroImageUrl(url.url.toString());
+            } catch (e) {
+              console.error("Failed to load hero image:", e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading site config:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSiteConfig();
+  }, []);
+
+  // ローディング中は何も表示しない（またはスピナーを表示）
+  if (loading) {
+    return (
+      <>
+        <ShinaiSlash onComplete={() => setShowContent(true)} />
+        <main className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent-600 border-t-transparent"></div>
+        </main>
+      </>
+    );
+  }
+
+  // データを取得（SiteConfigがあればそれを使用、なければデフォルト値）
+  const heroSlides = siteConfig
+    ? [
+        {
+          image: heroImageUrl || "/kosha.jpg",
+          title: siteConfig.heroTitle || defaultHeroSlides[0].title,
+          subtitle: siteConfig.heroSubtitle || defaultHeroSlides[0].subtitle,
+        },
+      ]
+    : defaultHeroSlides;
+
+  const welcomeTitle = siteConfig?.welcomeTitle || defaultWelcome.title;
+  const welcomeBody = siteConfig?.welcomeBody || defaultWelcome.body;
+  const ctaTitle = siteConfig?.ctaTitle || defaultCTA.title;
+  const ctaBody = siteConfig?.ctaBody || defaultCTA.body;
+  const footerCopyright = siteConfig?.footerCopyright || defaultFooter.copyright;
+
   return (
-    <main className="min-h-screen">
+    <>
+      <ShinaiSlash onComplete={() => setShowContent(true)} />
+      <motion.main
+        initial={{ opacity: 0 }}
+        animate={{ opacity: showContent ? 1 : 0 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen"
+      >
       {/* Hero Slideshow Section */}
       <HeroSlideshow slides={heroSlides} height="70vh" autoPlayInterval={6000} />
 
@@ -29,14 +162,15 @@ export default function Home() {
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
             <h2 className="mb-6 font-serif text-4xl font-bold text-primary-800 md:text-5xl">
-              ようこそ
+              {welcomeTitle}
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-primary-600 md:text-xl">
-              戸山高校剣道部OB会の公式サイトへようこそ。
-              <br />
-              このサイトは、OB会員の皆様が交流し、思い出を共有し、
-              <br />
-              母校剣道部の伝統を次世代へ繋いでいくための場所です。
+              {welcomeBody.split("\n").map((line: string, i: number) => (
+                <span key={i}>
+                  {line}
+                  {i < welcomeBody.split("\n").length - 1 && <br />}
+                </span>
+              ))}
             </p>
           </FadeIn>
 
@@ -80,29 +214,15 @@ export default function Home() {
           </FadeIn>
 
           <Stagger staggerDelay={0.2} className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <StaggerItem>
-              <FeatureCard
-                icon="💬"
-                title="近況投稿"
-                description="140文字で気軽に近況を共有。会員同士のコミュニケーションを活性化します。"
-              />
-            </StaggerItem>
-
-            <StaggerItem>
-              <FeatureCard
-                icon="📋"
-                title="掲示板"
-                description="スレッド形式でディスカッション。重要な情報はピン留めで常に上位表示。"
-              />
-            </StaggerItem>
-
-            <StaggerItem>
-              <FeatureCard
-                icon="📜"
-                title="歴史アーカイブ"
-                description="戸山高校剣道部の歴史を振り返る。公開情報と会員限定情報を管理。"
-              />
-            </StaggerItem>
+            {features.map((feature, index) => (
+              <StaggerItem key={index}>
+                <FeatureCard
+                  icon={feature.icon}
+                  title={feature.title}
+                  description={feature.description}
+                />
+              </StaggerItem>
+            ))}
           </Stagger>
         </div>
       </section>
@@ -117,12 +237,15 @@ export default function Home() {
         <div className="relative z-10 mx-auto max-w-4xl text-center">
           <SlideIn direction="up">
             <h2 className="mb-8 font-serif text-4xl font-bold text-white md:text-5xl">
-              会員の皆様へ
+              {ctaTitle}
             </h2>
             <p className="mb-12 text-xl leading-relaxed text-primary-100">
-              ログインして、懐かしい仲間との交流をお楽しみください。
-              <br />
-              戸山剣道部の思い出を共有し、絆を深めましょう。
+              {ctaBody.split("\n").map((line: string, i: number) => (
+                <span key={i}>
+                  {line}
+                  {i < ctaBody.split("\n").length - 1 && <br />}
+                </span>
+              ))}
             </p>
             <Link
               href="/app"
@@ -149,11 +272,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-primary-800 px-4 py-12 text-center text-primary-300">
-        <p className="text-sm">
-          © 2024 戸山高校剣道部OB会. All rights reserved.
-        </p>
+        <p className="text-sm">{footerCopyright}</p>
       </footer>
-    </main>
+      </motion.main>
+    </>
   );
 }
 

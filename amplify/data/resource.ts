@@ -89,6 +89,38 @@ const schema = a.schema({
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
+
+  // サイト設定（トップページのコンテンツ管理）
+  SiteConfig: a
+    .model({
+      // Heroセクション
+      heroTitle: a.string().required(),
+      heroSubtitle: a.string().required(),
+      heroImagePath: a.string(), // S3のパス
+
+      // Welcomeセクション
+      welcomeTitle: a.string().required(),
+      welcomeBody: a.string().required(),
+
+      // Features（JSON文字列で配列管理）
+      // [{icon: "💬", title: "近況投稿", description: "..."}]
+      featuresJson: a.string().required(),
+
+      // CTAセクション
+      ctaTitle: a.string().required(),
+      ctaBody: a.string().required(),
+
+      // フッター
+      footerCopyright: a.string().required(),
+
+      // 管理用
+      isActive: a.boolean().default(true), // アクティブな設定（1レコードのみ想定）
+    })
+    .authorization((allow) => [
+      allow.guest().to(["read"]), // トップページは誰でも閲覧可能
+      allow.authenticated().to(["read"]),
+      allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

@@ -1,13 +1,21 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node tools/schema-authz-guard.cjs:*)",
-      "WebSearch",
-      "Bash(npx tailwindcss:*)",
+      "Bash(tree:*)",
+      "Bash(nul)",
+      "Bash(dir:*)",
+      "Bash(cat amplify_outputs.json)",
+      "Bash(npm run typecheck:*)",
+      "WebFetch(domain:atlassian.design)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "WebSearch",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []

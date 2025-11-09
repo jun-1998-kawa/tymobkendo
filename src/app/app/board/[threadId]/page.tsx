@@ -1,9 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { generateClient } from "aws-amplify/data";
+import { uploadData, getUrl } from "aws-amplify/storage";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
@@ -24,6 +26,8 @@ export default function ThreadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [imagePaths, setImagePaths] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     // スレッド情報取得
@@ -49,6 +53,51 @@ export default function ThreadPage() {
     return () => sub.unsubscribe();
   }, [threadId]);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // 最大4枚まで
+    if (imagePaths.length + files.length > 4) {
+      setError("画像は最大4枚までアップロードできます");
+      setTimeout(() => setError(""), 5000);
+      return;
+    }
+
+    setUploading(true);
+    const uploadedPaths: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const timestamp = Date.now();
+        const randomStr = Math.random().toString(36).substring(7);
+        const fileName = `board/${timestamp}-${randomStr}-${file.name}`;
+
+        await uploadData({
+          path: `public/${fileName}`,
+          data: file,
+          options: {
+            contentType: file.type,
+          },
+        }).result;
+
+        uploadedPaths.push(fileName);
+      }
+
+      setImagePaths([...imagePaths, ...uploadedPaths]);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      setError("画像のアップロードに失敗しました");
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImagePaths(imagePaths.filter((_, i) => i !== index));
+  };
+
   const handlePost = async () => {
     if (!body.trim()) return;
 
@@ -59,9 +108,11 @@ export default function ThreadPage() {
     try {
       await models.BoardMessage.create({
         threadId,
-        body: body.trim()
+        body: body.trim(),
+        imagePaths: imagePaths.length > 0 ? imagePaths : null,
       });
       setBody("");
+      setImagePaths([]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e: any) {
@@ -176,6 +227,73 @@ export default function ThreadPage() {
               rows={4}
             />
 
+            {/* Image Upload Section */}
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-primary-800">
+                  画像を追加（最大4枚）
+                </label>
+                <div className="rounded-lg border-2 border-dashed border-primary-300 bg-primary-50 p-4 transition-all hover:border-accent-400 hover:bg-accent-50">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    disabled={uploading || imagePaths.length >= 4}
+                    className="w-full cursor-pointer text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-accent-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:transition-all hover:file:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  {uploading && (
+                    <p className="mt-2 text-sm text-accent-600">
+                      アップロード中...
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Image Preview Grid */}
+              {imagePaths.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+                  {imagePaths.map((path, index) => (
+                    <div
+                      key={index}
+                      className="group relative overflow-hidden rounded-lg border-2 border-primary-200 bg-white shadow-md transition-all hover:shadow-lg"
+                    >
+                      <div className="relative aspect-square">
+                        <div className="flex h-full w-full items-center justify-center bg-primary-100 p-2">
+                          <span className="text-4xl">🖼️</span>
+                        </div>
+                      </div>
+                      <div className="p-2">
+                        <p className="truncate text-xs text-primary-600">
+                          {path.split("/").pop()}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(index)}
+                        className="absolute right-2 top-2 rounded-full bg-red-500 p-1.5 text-white opacity-0 shadow-lg transition-all hover:bg-red-600 group-hover:opacity-100"
+                        title="削除"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="mt-4 flex items-center justify-between">
               <div className="text-sm text-primary-500">
                 {body.length > 0 && (
@@ -183,13 +301,18 @@ export default function ThreadPage() {
                     {body.length}文字
                   </span>
                 )}
+                {imagePaths.length > 0 && (
+                  <span className="ml-3 font-medium text-accent-600">
+                    📎 {imagePaths.length}枚の画像
+                  </span>
+                )}
               </div>
 
               <button
-                disabled={!body.trim() || loading}
+                disabled={!body.trim() || loading || uploading}
                 onClick={handlePost}
                 className={`group relative overflow-hidden rounded-full px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 ${
-                  !body.trim() || loading
+                  !body.trim() || loading || uploading
                     ? "cursor-not-allowed bg-primary-300"
                     : "bg-gradient-to-r from-accent-600 to-accent-700 hover:scale-105 hover:shadow-xl"
                 }`}
@@ -311,6 +434,28 @@ function MessageCard({
   onDelete: (id: string) => void;
 }) {
   const [showActions, setShowActions] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchImageUrls = async () => {
+      if (message.imagePaths && message.imagePaths.length > 0) {
+        const urls = await Promise.all(
+          message.imagePaths.map(async (path: string) => {
+            try {
+              const urlResult = await getUrl({ path: `public/${path}` });
+              return urlResult.url.toString();
+            } catch (err) {
+              console.error("Error getting image URL:", err);
+              return null;
+            }
+          })
+        );
+        setImageUrls(urls.filter((url): url is string => url !== null));
+      }
+    };
+
+    fetchImageUrls();
+  }, [message.imagePaths]);
 
   return (
     <motion.div
@@ -366,6 +511,35 @@ function MessageCard({
       <p className="whitespace-pre-wrap text-lg leading-relaxed text-primary-700">
         {message.body}
       </p>
+
+      {/* Images Grid */}
+      {imageUrls.length > 0 && (
+        <div className={`mt-4 grid gap-2 ${
+          imageUrls.length === 1
+            ? 'grid-cols-1'
+            : imageUrls.length === 2
+            ? 'grid-cols-2'
+            : imageUrls.length === 3
+            ? 'grid-cols-3'
+            : 'grid-cols-2'
+        }`}>
+          {imageUrls.map((url, index) => (
+            <div
+              key={index}
+              className="relative overflow-hidden rounded-lg border border-primary-200"
+              style={{ aspectRatio: imageUrls.length === 1 ? '16/9' : '1/1' }}
+            >
+              <Image
+                src={url}
+                alt={`メッセージ画像 ${index + 1}`}
+                fill
+                className="object-cover transition-transform hover:scale-105"
+                unoptimized
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

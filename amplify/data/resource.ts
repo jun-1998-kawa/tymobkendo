@@ -47,6 +47,7 @@ const schema = a.schema({
       threadId: a.id().required(),
       body: a.string().required(),
       imagePaths: a.string().array(),
+      authorId: a.string(), // 投稿者のUser ID（画像パス用）
       isHidden: a.boolean().default(false),
     })
     .authorization((allow) => [

@@ -24,8 +24,22 @@ export default function ThreadPage() {
   const [success, setSuccess] = useState(false);
   const [imagePaths, setImagePaths] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
+    // 現在のユーザーIDを取得
+    const fetchCurrentUserId = async () => {
+      try {
+        const { getCurrentUser } = await import("aws-amplify/auth");
+        const user = await getCurrentUser();
+        setCurrentUserId(user.userId);
+      } catch (err) {
+        console.error("Error fetching current user:", err);
+      }
+    };
+
+    fetchCurrentUserId();
+
     // スレッド情報取得
     models.BoardThread.get({ id: threadId }).then((result: any) => {
       if (result.data) {
@@ -68,8 +82,9 @@ export default function ThreadPage() {
         const randomStr = Math.random().toString(36).substring(7);
         const fileName = `board/${timestamp}-${randomStr}-${file.name}`;
 
+        // members/{entity_id}/ パスを使用
         await uploadData({
-          path: `public/${fileName}`,
+          path: `members/${currentUserId}/${fileName}`,
           data: file,
           options: {
             contentType: file.type,
@@ -105,6 +120,7 @@ export default function ThreadPage() {
         threadId,
         body: body.trim(),
         imagePaths: imagePaths.length > 0 ? imagePaths : null,
+        authorId: currentUserId,
       });
       setBody("");
       setImagePaths([]);
@@ -269,11 +285,12 @@ function MessageRow({
 
   useEffect(() => {
     const fetchImageUrls = async () => {
-      if (message.imagePaths && message.imagePaths.length > 0) {
+      if (message.imagePaths && message.imagePaths.length > 0 && message.authorId) {
         const urls = await Promise.all(
           message.imagePaths.map(async (path: string) => {
             try {
-              const urlResult = await getUrl({ path: `public/${path}` });
+              // members/{authorId}/ パスから画像を取得
+              const urlResult = await getUrl({ path: `members/${message.authorId}/${path}` });
               return urlResult.url.toString();
             } catch (err) {
               console.error("Error getting image URL:", err);
@@ -286,7 +303,7 @@ function MessageRow({
     };
 
     fetchImageUrls();
-  }, [message.imagePaths]);
+  }, [message.imagePaths, message.authorId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

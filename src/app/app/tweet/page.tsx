@@ -93,8 +93,9 @@ export default function TweetPage() {
         const randomStr = Math.random().toString(36).substring(7);
         const fileName = `tweets/${timestamp}-${randomStr}-${file.name}`;
 
+        // members/{entity_id}/ パスを使用（自動的に現在のユーザーIDに解決される）
         await uploadData({
-          path: `public/${fileName}`,
+          path: `members/${currentUserId}/${fileName}`,
           data: file,
           options: {
             contentType: file.type,
@@ -426,11 +427,12 @@ function TweetCard({
 
   useEffect(() => {
     const fetchImageUrls = async () => {
-      if (tweet.imagePaths && tweet.imagePaths.length > 0) {
+      if (tweet.imagePaths && tweet.imagePaths.length > 0 && tweet.authorId) {
         const urls = await Promise.all(
           tweet.imagePaths.map(async (path: string) => {
             try {
-              const urlResult = await getUrl({ path: `public/${path}` });
+              // members/{authorId}/ パスから画像を取得
+              const urlResult = await getUrl({ path: `members/${tweet.authorId}/${path}` });
               return urlResult.url.toString();
             } catch (err) {
               console.error("Error getting image URL:", err);
@@ -443,7 +445,7 @@ function TweetCard({
     };
 
     fetchImageUrls();
-  }, [tweet.imagePaths]);
+  }, [tweet.imagePaths, tweet.authorId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

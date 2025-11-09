@@ -2,6 +2,8 @@
 import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 // Authenticator form fields configuration
 const formFields = {
@@ -67,10 +69,34 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
 
 function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?: string; user?: any }) {
   const pathname = usePathname();
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // ユーザーのグループを取得
-  const groups = user?.signInUserSession?.accessToken?.payload["cognito:groups"] || [];
-  const isAdmin = groups.includes("ADMINS");
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        // 方法1: Authenticatorのuserオブジェクトから取得
+        const groups1 = user?.signInUserSession?.accessToken?.payload["cognito:groups"] || [];
+        console.log("🔍 Method 1 - Groups from user object:", groups1);
+
+        // 方法2: fetchAuthSessionから取得（より確実）
+        const session = await fetchAuthSession();
+        const groups2 = session.tokens?.accessToken?.payload["cognito:groups"] as string[] || [];
+        console.log("🔍 Method 2 - Groups from fetchAuthSession:", groups2);
+
+        // デバッグ情報
+        console.log("🔍 Full session:", session);
+        console.log("🔍 Access token payload:", session.tokens?.accessToken?.payload);
+
+        const adminStatus = groups2.includes("ADMINS");
+        console.log("🔍 Is Admin:", adminStatus);
+        setIsAdmin(adminStatus);
+      } catch (error) {
+        console.error("❌ Error checking admin status:", error);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   const navItems = [
     { href: "/app", label: "ダッシュボード", icon: "🏠" },
@@ -82,6 +108,9 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
   // 管理者の場合は管理ページを追加
   if (isAdmin) {
     navItems.push({ href: "/admin", label: "管理", icon: "⚙️" });
+    console.log("✅ Admin link added to navigation");
+  } else {
+    console.log("❌ User is not an admin, admin link not added");
   }
 
   const isActive = (href: string) => pathname === href || (href === "/admin" && pathname.startsWith("/admin"));

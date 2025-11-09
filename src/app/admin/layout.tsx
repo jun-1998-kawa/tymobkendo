@@ -3,6 +3,7 @@ import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { fetchAuthSession } from "aws-amplify/auth";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,8 +20,13 @@ function AdminGuard({ signOut, user, children }: any) {
   useEffect(() => {
     const checkAdmin = async () => {
       try {
-        const groups = user?.signInUserSession?.accessToken?.payload["cognito:groups"] || [];
-        setIsAdmin(groups.includes("ADMINS"));
+        // fetchAuthSessionを使ってより確実にグループ情報を取得
+        const session = await fetchAuthSession();
+        const groups = session.tokens?.accessToken?.payload["cognito:groups"] as string[] || [];
+        console.log("🔍 Admin layout - Groups:", groups);
+        const adminStatus = groups.includes("ADMINS");
+        console.log("🔍 Admin layout - Is Admin:", adminStatus);
+        setIsAdmin(adminStatus);
       } catch (error) {
         console.error("Error checking admin status:", error);
         setIsAdmin(false);

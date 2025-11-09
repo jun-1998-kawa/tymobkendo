@@ -6,13 +6,27 @@ const schema = a.schema({
     .model({
       content: a.string().required(), // 140文字制限はフロントエンドで実装
       imagePaths: a.string().array(),
-      author: a.string(),
+      author: a.string(), // Cognitoの表示名（姓名）を保存
+      authorId: a.string(), // Cognito User ID（検索用）
+      replyToId: a.id(), // リプライ元のTweet ID（nullの場合は元投稿）
+      replyCount: a.integer().default(0), // リプライの数（非正規化）
+      favoriteCount: a.integer().default(0), // いいね数（非正規化）
       isHidden: a.boolean().default(false), // ADMINSが強制非表示にする用途（soft delete）
     })
     .authorization((allow) => [
       allow.authenticated().to(["create", "read"]),
       allow.owner(), // 自分のupdate/delete
       allow.groups(["ADMINS"]).to(["update", "delete"]),
+    ]),
+
+  // Favorite（いいね）
+  Favorite: a
+    .model({
+      tweetId: a.id().required(), // いいねされたTweet ID
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(["create", "read"]),
+      allow.owner().to(["delete"]), // 自分のいいねは削除可能
     ]),
 
   // 掲示板スレッド

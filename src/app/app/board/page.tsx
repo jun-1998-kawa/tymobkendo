@@ -2,10 +2,6 @@
 import { useEffect, useState } from "react";
 import { generateClient } from "aws-amplify/data";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import FadeIn from "@/components/ui/FadeIn";
-import SlideIn from "@/components/ui/SlideIn";
-import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 
 const client = generateClient();
 const models = client.models as any;
@@ -63,157 +59,85 @@ export default function BoardPage() {
   const regularThreads = threads.filter((t) => !t.pinned);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
       {/* Header */}
-      <FadeIn>
-        <div className="text-center">
-          <h1 className="mb-2 text-4xl font-bold text-primary-800">
-            📋 掲示板
-          </h1>
-          <p className="text-primary-600">
-            スレッドを立てて、みんなで議論しよう
-          </p>
-        </div>
-      </FadeIn>
+      <div className="bg-[#EFEFEF] border-b border-gray-400 px-4 py-3">
+        <h1 className="text-2xl font-bold text-gray-800">掲示板</h1>
+      </div>
 
       {/* Create Thread Form */}
-      <SlideIn direction="up" delay={0.1}>
-        <div className="overflow-hidden rounded-2xl border border-primary-200 bg-white shadow-xl">
-          <div className="bg-gradient-to-r from-accent-50 to-gold-50 p-6">
-            <h2 className="text-xl font-bold text-primary-800">新規スレッド作成</h2>
+      <div className="bg-[#EFEFEF] border-b border-gray-300 p-4">
+        <div className="bg-white border border-gray-400 p-3">
+          <div className="mb-2">
+            <label className="text-sm font-semibold text-gray-700">
+              新規スレッド作成
+            </label>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="スレッドタイトル"
+              className="flex-1 border border-gray-400 px-3 py-2 text-sm focus:outline-none focus:border-gray-600"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!title.trim() || loading}
+              className={`px-4 py-2 text-sm border border-gray-400 ${
+                !title.trim() || loading
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-white hover:bg-gray-100 text-gray-700"
+              }`}
+            >
+              {loading ? "作成中..." : "作成する"}
+            </button>
           </div>
 
-          <div className="p-6">
-            <div className="flex gap-3">
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="スレッドのタイトルを入力..."
-                className="flex-1 rounded-xl border-2 border-primary-200 bg-primary-50 px-4 py-3 text-lg transition-all focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-200"
-              />
-              <button
-                onClick={handleCreate}
-                disabled={!title.trim() || loading}
-                className={`rounded-xl px-8 py-3 font-semibold text-white shadow-lg transition-all duration-300 ${
-                  !title.trim() || loading
-                    ? "cursor-not-allowed bg-primary-300"
-                    : "bg-gradient-to-r from-accent-600 to-accent-700 hover:scale-105 hover:shadow-xl"
-                }`}
-              >
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    作成中...
-                  </span>
-                ) : (
-                  "作成"
-                )}
-              </button>
+          {/* Success/Error Messages */}
+          {success && (
+            <div className="mt-2 text-sm text-green-700 bg-green-50 border border-green-300 p-2">
+              スレッドを作成しました
             </div>
+          )}
 
-            {/* Success/Error Messages */}
-            <AnimatePresence>
-              {success && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-4 rounded-lg border border-green-200 bg-green-50 p-4 text-green-800"
-                >
-                  ✅ スレッドを作成しました！
-                </motion.div>
-              )}
-
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-800"
-                >
-                  ❌ {error}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {error && (
+            <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-300 p-2">
+              {error}
+            </div>
+          )}
         </div>
-      </SlideIn>
+      </div>
 
       {/* Thread List */}
-      <div className="space-y-6">
+      <div className="bg-white">
         {/* Pinned Threads */}
         {pinnedThreads.length > 0 && (
-          <div>
-            <FadeIn delay={0.2}>
-              <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-800">
-                <span>📌</span>
-                <span>ピン留めスレッド</span>
-              </h2>
-            </FadeIn>
-
-            <Stagger staggerDelay={0.1} className="space-y-3">
-              {pinnedThreads.map((thread) => (
-                <StaggerItem key={thread.id}>
-                  <ThreadCard thread={thread} isPinned />
-                </StaggerItem>
-              ))}
-            </Stagger>
+          <div className="border-b-2 border-gray-400">
+            <div className="bg-[#FFFFCC] px-4 py-2 border-b border-gray-300">
+              <span className="text-sm font-bold text-gray-700">■ 固定スレッド</span>
+            </div>
+            {pinnedThreads.map((thread, index) => (
+              <ThreadRow key={thread.id} thread={thread} index={index + 1} isPinned />
+            ))}
           </div>
         )}
 
         {/* Regular Threads */}
         <div>
-          <FadeIn delay={0.3}>
-            <h2 className="mb-4 flex items-center gap-2 text-2xl font-bold text-primary-800">
-              <span>💬</span>
-              <span>スレッド一覧</span>
-              {regularThreads.length > 0 && (
-                <span className="ml-2 rounded-full bg-accent-100 px-3 py-1 text-sm text-accent-700">
-                  {regularThreads.length}件
-                </span>
-              )}
-            </h2>
-          </FadeIn>
-
           {threads.length === 0 ? (
-            <FadeIn delay={0.4}>
-              <div className="rounded-2xl border-2 border-dashed border-primary-200 bg-primary-50 p-12 text-center">
-                <div className="mb-4 text-6xl">📝</div>
-                <p className="text-lg text-primary-600">
-                  まだスレッドがありません
-                </p>
-                <p className="mt-2 text-sm text-primary-500">
-                  最初のスレッドを作成してみましょう！
-                </p>
-              </div>
-            </FadeIn>
+            <div className="p-8 text-center text-gray-500 text-sm">
+              スレッドがありません
+            </div>
           ) : regularThreads.length === 0 ? (
-            <p className="text-center text-primary-500">通常スレッドはありません</p>
+            <div className="p-8 text-center text-gray-500 text-sm">
+              通常スレッドはありません
+            </div>
           ) : (
-            <Stagger staggerDelay={0.1} className="space-y-3">
-              {regularThreads.map((thread) => (
-                <StaggerItem key={thread.id}>
-                  <ThreadCard thread={thread} />
-                </StaggerItem>
-              ))}
-            </Stagger>
+            regularThreads.map((thread, index) => (
+              <ThreadRow key={thread.id} thread={thread} index={index + 1} />
+            ))
           )}
         </div>
       </div>
@@ -221,83 +145,35 @@ export default function BoardPage() {
   );
 }
 
-// Thread Card Component
-function ThreadCard({ thread, isPinned = false }: { thread: any; isPinned?: boolean }) {
+// Thread Row Component
+function ThreadRow({ thread, index, isPinned = false }: { thread: any; index: number; isPinned?: boolean }) {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).replace(/\//g, "/");
+  };
+
   return (
     <Link href={`/app/board/${thread.id}`}>
-      <motion.div
-        whileHover={{ scale: 1.01, x: 4 }}
-        className={`group relative overflow-hidden rounded-xl border p-6 shadow-md transition-all duration-300 hover:shadow-xl ${
-          isPinned
-            ? "border-gold-300 bg-gradient-to-r from-gold-50 to-yellow-50"
-            : "border-primary-200 bg-white"
-        }`}
-      >
-        {/* Gradient Accent */}
-        <div
-          className={`absolute left-0 top-0 h-full w-1 ${
-            isPinned
-              ? "bg-gradient-to-b from-gold-500 to-yellow-500"
-              : "bg-gradient-to-b from-accent-500 to-gold-500"
-          }`}
-        ></div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <div className="mb-2 flex items-center gap-2">
-              {isPinned && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-gold-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                  📌 ピン留め
-                </span>
-              )}
-            </div>
-
-            <h3 className="mb-2 text-xl font-bold text-primary-800 group-hover:text-accent-600 transition-colors">
-              {thread.title}
-            </h3>
-
-            <div className="flex items-center gap-4 text-sm text-primary-500">
-              <span className="flex items-center gap-1">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {new Date(thread.createdAt).toLocaleDateString("ja-JP", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-            </div>
-          </div>
-
-          {/* Arrow Icon */}
-          <div className="flex items-center text-primary-400 transition-all group-hover:translate-x-2 group-hover:text-accent-600">
-            <svg
-              className="h-6 w-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </div>
+      <div className={`px-4 py-2.5 border-b border-gray-200 hover:bg-gray-50 ${
+        isPinned ? 'bg-[#FFFFEE]' : 'bg-white'
+      }`}>
+        <div className="flex items-baseline gap-2 text-sm">
+          <span className="text-gray-500 font-mono">{index}:</span>
+          <span className="flex-1 text-blue-700 hover:underline">
+            {thread.title}
+          </span>
+          {isPinned && (
+            <span className="text-xs text-red-600 font-bold">【固定】</span>
+          )}
+          <span className="text-xs text-gray-500">
+            ({formatDate(thread.createdAt)})
+          </span>
         </div>
-      </motion.div>
+      </div>
     </Link>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { Authenticator } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -52,19 +52,25 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
       formFields={formFields}
       signUpAttributes={["given_name", "family_name", "custom:graduationYear"] as any}
     >
-      {({ signOut, user }) => (
-        <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">
-          <Header signOut={signOut} userEmail={user?.signInDetails?.loginId} />
-          <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
-          <Footer />
-        </div>
-      )}
+      {({ signOut, user }) => {
+        return (
+          <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">
+            <Header signOut={signOut} userEmail={user?.signInDetails?.loginId} user={user} />
+            <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
+            <Footer />
+          </div>
+        );
+      }}
     </Authenticator>
   );
 }
 
-function Header({ signOut, userEmail }: { signOut?: () => void; userEmail?: string }) {
+function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?: string; user?: any }) {
   const pathname = usePathname();
+
+  // ユーザーのグループを取得
+  const groups = user?.signInUserSession?.accessToken?.payload["cognito:groups"] || [];
+  const isAdmin = groups.includes("ADMINS");
 
   const navItems = [
     { href: "/app", label: "ダッシュボード", icon: "🏠" },
@@ -73,7 +79,12 @@ function Header({ signOut, userEmail }: { signOut?: () => void; userEmail?: stri
     { href: "/app/history", label: "歴史", icon: "📜" },
   ];
 
-  const isActive = (href: string) => pathname === href;
+  // 管理者の場合は管理ページを追加
+  if (isAdmin) {
+    navItems.push({ href: "/admin", label: "管理", icon: "⚙️" });
+  }
+
+  const isActive = (href: string) => pathname === href || (href === "/admin" && pathname.startsWith("/admin"));
 
   return (
     <header className="sticky top-0 z-50 border-b border-primary-200 bg-white/95 shadow-md backdrop-blur-sm">
@@ -117,7 +128,7 @@ function Header({ signOut, userEmail }: { signOut?: () => void; userEmail?: stri
           <div className="flex items-center gap-4">
             <div className="hidden text-right md:block">
               <p className="text-sm font-medium text-primary-800">{userEmail}</p>
-              <p className="text-xs text-primary-500">会員</p>
+              <p className="text-xs text-primary-500">{isAdmin ? "管理者" : "会員"}</p>
             </div>
             <button
               onClick={signOut}

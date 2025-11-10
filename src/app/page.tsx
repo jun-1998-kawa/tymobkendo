@@ -64,7 +64,7 @@ const defaultFooter = {
 
 export default function Home() {
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
-  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
+  const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
   const [showContent, setShowContent] = useState(false);
@@ -91,13 +91,26 @@ export default function Home() {
             }
           }
 
-          // ヒーロー画像のURL取得
-          if (config.heroImagePath) {
+          // 複数ヒーロー画像のURL取得（優先）
+          if (config.heroImagePaths && config.heroImagePaths.length > 0) {
+            try {
+              const urlPromises = config.heroImagePaths.map(async (path: string) => {
+                const url = await getUrl({ path: `public/${path}` });
+                return url.url.toString();
+              });
+              const urls = await Promise.all(urlPromises);
+              setHeroImageUrls(urls);
+            } catch (e) {
+              console.error("Failed to load hero images:", e);
+            }
+          }
+          // 後方互換性: 単一画像パスのフォールバック
+          else if (config.heroImagePath) {
             try {
               const url = await getUrl({
                 path: `public/${config.heroImagePath}`,
               });
-              setHeroImageUrl(url.url.toString());
+              setHeroImageUrls([url.url.toString()]);
             } catch (e) {
               console.error("Failed to load hero image:", e);
             }
@@ -126,15 +139,15 @@ export default function Home() {
   }
 
   // データを取得（SiteConfigがあればそれを使用、なければデフォルト値）
-  const heroSlides = siteConfig
-    ? [
-        {
-          image: heroImageUrl || "/kosha.jpg",
-          title: siteConfig.heroTitle || defaultHeroSlides[0].title,
-          subtitle: siteConfig.heroSubtitle || defaultHeroSlides[0].subtitle,
-        },
-      ]
+  const heroSlides = siteConfig && heroImageUrls.length > 0
+    ? heroImageUrls.map(url => ({
+        image: url,
+        title: siteConfig.heroTitle || defaultHeroSlides[0].title,
+        subtitle: siteConfig.heroSubtitle || defaultHeroSlides[0].subtitle,
+      }))
     : defaultHeroSlides;
+
+  const slideInterval = siteConfig?.heroSlideInterval || 6000;
 
   const welcomeTitle = siteConfig?.welcomeTitle || defaultWelcome.title;
   const welcomeBody = siteConfig?.welcomeBody || defaultWelcome.body;
@@ -152,7 +165,7 @@ export default function Home() {
         className="min-h-screen"
       >
       {/* Hero Slideshow Section */}
-      <HeroSlideshow slides={heroSlides} height="70vh" autoPlayInterval={6000} />
+      <HeroSlideshow slides={heroSlides} height="70vh" autoPlayInterval={slideInterval} />
 
       {/* News Section */}
       <NewsSection />

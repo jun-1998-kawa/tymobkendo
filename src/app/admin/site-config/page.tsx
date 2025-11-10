@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { generateClient } from "aws-amplify/data";
-import { uploadData, getUrl } from "aws-amplify/storage";
+import { uploadData, getUrl, remove } from "aws-amplify/storage";
 import FadeIn from "@/components/ui/FadeIn";
 
 const client = generateClient();
@@ -22,8 +22,9 @@ export default function SiteConfigPage() {
   // Hero section
   const [heroTitle, setHeroTitle] = useState("");
   const [heroSubtitle, setHeroSubtitle] = useState("");
-  const [heroImagePath, setHeroImagePath] = useState("");
-  const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [heroImagePaths, setHeroImagePaths] = useState<string[]>([]);
+  const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
+  const [heroSlideInterval, setHeroSlideInterval] = useState(6000);
   const [uploadingHero, setUploadingHero] = useState(false);
 
   // Welcome section
@@ -60,7 +61,7 @@ export default function SiteConfigPage() {
         setConfig(activeConfig);
         setHeroTitle(activeConfig.heroTitle || "");
         setHeroSubtitle(activeConfig.heroSubtitle || "");
-        setHeroImagePath(activeConfig.heroImagePath || "");
+        setHeroSlideInterval(activeConfig.heroSlideInterval || 6000);
         setWelcomeTitle(activeConfig.welcomeTitle || "");
         setWelcomeBody(activeConfig.welcomeBody || "");
         setCtaTitle(activeConfig.ctaTitle || "");
@@ -76,13 +77,30 @@ export default function SiteConfigPage() {
           }
         }
 
-        // Load hero image URL
-        if (activeConfig.heroImagePath) {
+        // Load hero image URLs (複数画像対応)
+        if (activeConfig.heroImagePaths && activeConfig.heroImagePaths.length > 0) {
+          try {
+            const paths = activeConfig.heroImagePaths;
+            setHeroImagePaths(paths);
+
+            const urlPromises = paths.map(async (path: string) => {
+              const url = await getUrl({ path: `public/${path}` });
+              return url.url.toString();
+            });
+            const urls = await Promise.all(urlPromises);
+            setHeroImageUrls(urls);
+          } catch (e) {
+            console.error("Failed to load hero images:", e);
+          }
+        }
+        // 後方互換性: 単一画像パス
+        else if (activeConfig.heroImagePath) {
           try {
             const url = await getUrl({
               path: `public/${activeConfig.heroImagePath}`,
             });
-            setHeroImageUrl(url.url.toString());
+            setHeroImagePaths([activeConfig.heroImagePath]);
+            setHeroImageUrls([url.url.toString()]);
           } catch (e) {
             console.error("Failed to load hero image:", e);
           }
@@ -96,34 +114,70 @@ export default function SiteConfigPage() {
   };
 
   const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // 最大4枚に制限
+    const remainingSlots = 4 - heroImagePaths.length;
+    if (remainingSlots <= 0) {
+      alert("最大4枚まで登録できます。不要な画像を削除してから追加してください。");
+      return;
+    }
+
+    const filesToUpload = Array.from(files).slice(0, remainingSlots);
 
     setUploadingHero(true);
     try {
       const timestamp = Date.now();
-      const fileName = `site-config/hero-${timestamp}-${file.name}`;
+      const uploadPromises = filesToUpload.map(async (file, index) => {
+        const fileName = `site-config/hero-${timestamp}-${index}-${file.name}`;
 
-      await uploadData({
-        path: `public/${fileName}`,
-        data: file,
-        options: {
-          contentType: file.type,
-        },
-      }).result;
+        await uploadData({
+          path: `public/${fileName}`,
+          data: file,
+          options: {
+            contentType: file.type,
+          },
+        }).result;
 
-      setHeroImagePath(fileName);
+        // Get URL for preview
+        const url = await getUrl({
+          path: `public/${fileName}`,
+        });
 
-      // Get URL for preview
-      const url = await getUrl({
-        path: `public/${fileName}`,
+        return { path: fileName, url: url.url.toString() };
       });
-      setHeroImageUrl(url.url.toString());
+
+      const results = await Promise.all(uploadPromises);
+
+      setHeroImagePaths([...heroImagePaths, ...results.map(r => r.path)]);
+      setHeroImageUrls([...heroImageUrls, ...results.map(r => r.url)]);
+
+      alert(`${results.length}枚の画像をアップロードしました`);
     } catch (error) {
-      console.error("Error uploading hero image:", error);
+      console.error("Error uploading hero images:", error);
       alert("画像のアップロードに失敗しました");
     } finally {
       setUploadingHero(false);
+      // Reset input
+      e.target.value = "";
+    }
+  };
+
+  const removeHeroImage = async (index: number) => {
+    if (!confirm("この画像を削除しますか？")) return;
+
+    try {
+      // S3から削除（オプション）
+      // const pathToRemove = heroImagePaths[index];
+      // await remove({ path: `public/${pathToRemove}` });
+
+      // 配列から削除
+      setHeroImagePaths(heroImagePaths.filter((_, i) => i !== index));
+      setHeroImageUrls(heroImageUrls.filter((_, i) => i !== index));
+    } catch (error) {
+      console.error("Error removing image:", error);
+      alert("画像の削除に失敗しました");
     }
   };
 
@@ -154,7 +208,8 @@ export default function SiteConfigPage() {
           id: config.id,
           heroTitle,
           heroSubtitle,
-          heroImagePath: heroImagePath || null,
+          heroImagePaths: heroImagePaths.length > 0 ? heroImagePaths : null,
+          heroSlideInterval,
           welcomeTitle,
           welcomeBody,
           featuresJson,
@@ -167,7 +222,8 @@ export default function SiteConfigPage() {
         await models.SiteConfig.create({
           heroTitle,
           heroSubtitle,
-          heroImagePath: heroImagePath || null,
+          heroImagePaths: heroImagePaths.length > 0 ? heroImagePaths : null,
+          heroSlideInterval,
           welcomeTitle,
           welcomeBody,
           featuresJson,
@@ -214,7 +270,7 @@ export default function SiteConfigPage() {
           {/* Hero Section */}
           <section className="space-y-4 border-b border-primary-200 pb-8">
             <h2 className="font-serif text-2xl font-bold text-primary-800">
-              ヒーローセクション
+              ヒーローセクション（スライドショー）
             </h2>
 
             <div>
@@ -247,27 +303,68 @@ export default function SiteConfigPage() {
 
             <div>
               <label className="mb-2 block text-sm font-semibold text-primary-800">
-                ヒーロー画像
+                スライド切替間隔（ミリ秒）
               </label>
-              {heroImageUrl && (
-                <div className="mb-4 overflow-hidden rounded-lg">
-                  <img
-                    src={heroImageUrl}
-                    alt="Hero"
-                    className="h-48 w-full object-cover"
-                  />
+              <input
+                type="number"
+                value={heroSlideInterval}
+                onChange={(e) => setHeroSlideInterval(Number(e.target.value))}
+                min={2000}
+                max={15000}
+                step={1000}
+                className="w-full rounded-lg border-2 border-primary-200 bg-primary-50 px-4 py-3 transition-all focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                placeholder="6000"
+              />
+              <p className="mt-1 text-xs text-primary-500">
+                ※ 推奨: 6000ms（6秒）　範囲: 2000〜15000ms
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-primary-800">
+                スライドショー画像（最大4枚）
+              </label>
+
+              {/* 画像プレビュー */}
+              {heroImageUrls.length > 0 && (
+                <div className="mb-4 grid gap-4 md:grid-cols-2">
+                  {heroImageUrls.map((url, index) => (
+                    <div key={index} className="group relative overflow-hidden rounded-lg border-2 border-primary-200">
+                      <img
+                        src={url}
+                        alt={`Hero ${index + 1}`}
+                        className="h-48 w-full object-cover"
+                      />
+                      <div className="absolute top-2 left-2 rounded-lg bg-black/70 px-3 py-1 text-sm font-semibold text-white">
+                        {index + 1}枚目
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeHeroImage(index)}
+                        className="absolute top-2 right-2 rounded-lg bg-red-600 px-3 py-1 text-sm font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  ))}
                 </div>
               )}
+
+              {/* アップロードボタン */}
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleHeroImageUpload}
-                disabled={uploadingHero}
+                disabled={uploadingHero || heroImagePaths.length >= 4}
                 className="w-full cursor-pointer file:mr-4 file:rounded-lg file:border-0 file:bg-amber-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:transition-all hover:file:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
               />
               {uploadingHero && (
                 <p className="mt-2 text-sm text-amber-600">アップロード中...</p>
               )}
+              <p className="mt-1 text-xs text-primary-500">
+                ※ 現在 {heroImagePaths.length}/4枚　｜　複数選択可能（残り{4 - heroImagePaths.length}枚）
+              </p>
             </div>
           </section>
 

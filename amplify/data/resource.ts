@@ -111,7 +111,9 @@ const schema = a.schema({
       // Heroセクション
       heroTitle: a.string().required(),
       heroSubtitle: a.string().required(),
-      heroImagePath: a.string(), // S3のパス
+      heroImagePath: a.string(), // S3のパス（後方互換性のため残す、非推奨）
+      heroImagePaths: a.string().array(), // 複数画像パス（スライドショー用）
+      heroSlideInterval: a.integer().default(6000), // スライド切替間隔（ms）
 
       // Welcomeセクション
       welcomeTitle: a.string().required(),

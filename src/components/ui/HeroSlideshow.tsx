@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import HeroNavigation from "@/components/HeroNavigation";
 
 interface Slide {
   image: string;
@@ -17,12 +18,14 @@ interface HeroSlideshowProps {
 
 export default function HeroSlideshow({
   slides,
-  autoPlayInterval = 5000,
-  height = "600px",
+  autoPlayInterval = 6000,
+  height = "70vh",
 }: HeroSlideshowProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    if (slides.length <= 1) return;
+
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
     }, autoPlayInterval);
@@ -45,53 +48,62 @@ export default function HeroSlideshow({
   return (
     <div
       className="relative overflow-hidden bg-primary-900"
-      style={{ height }}
+      style={{ height, minHeight: "500px" }}
     >
+      {/* Navigation - Always on top */}
+      <HeroNavigation />
+
       {/* Slides */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentIndex}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1 }}
+          initial={{ opacity: 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 1.2, ease: "easeInOut" }}
           className="absolute inset-0"
         >
-          {/* Background Image with Overlay */}
+          {/* Background Image with High Quality */}
           <div className="relative h-full w-full">
             <Image
               src={slides[currentIndex].image}
-              alt={slides[currentIndex].title || "Slide"}
+              alt={slides[currentIndex].title || `Slide ${currentIndex + 1}`}
               fill
+              quality={95}
+              sizes="100vw"
               className="object-cover"
               priority={currentIndex === 0}
             />
-            {/* Dark overlay for text readability */}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary-900/40 via-primary-900/30 to-primary-900/80" />
+            {/* Enhanced gradient overlay - darker at top for navigation readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/60" />
           </div>
 
-          {/* Content */}
+          {/* Content - Positioned at top center */}
           {(slides[currentIndex].title || slides[currentIndex].subtitle) && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white">
+            <div className="absolute top-0 left-0 right-0 flex items-start justify-center pt-28 md:pt-36 px-4">
+              <div className="text-center text-white max-w-4xl">
                 {slides[currentIndex].title && (
                   <motion.h1
-                    initial={{ y: 20, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.2 }}
-                    className="mb-4 text-5xl font-bold md:text-7xl"
-                    style={{ textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="mb-4 font-serif text-4xl font-bold md:text-6xl lg:text-7xl"
+                    style={{
+                      textShadow: "0 4px 30px rgba(0,0,0,0.9), 0 2px 15px rgba(0,0,0,0.8)"
+                    }}
                   >
                     {slides[currentIndex].title}
                   </motion.h1>
                 )}
                 {slides[currentIndex].subtitle && (
                   <motion.p
-                    initial={{ y: 20, opacity: 0 }}
+                    initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-xl md:text-2xl"
-                    style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
+                    className="text-lg md:text-2xl lg:text-3xl text-white/95"
+                    style={{
+                      textShadow: "0 3px 20px rgba(0,0,0,0.8), 0 2px 10px rgba(0,0,0,0.7)"
+                    }}
                   >
                     {slides[currentIndex].subtitle}
                   </motion.p>
@@ -107,7 +119,7 @@ export default function HeroSlideshow({
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/20 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-white/40 hover:scale-110"
+            className="absolute left-4 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/20 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-white/40 hover:scale-110"
             aria-label="Previous slide"
           >
             <svg
@@ -127,7 +139,7 @@ export default function HeroSlideshow({
 
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/20 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-white/40 hover:scale-110"
+            className="absolute right-4 top-1/2 z-40 -translate-y-1/2 rounded-full bg-white/20 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-white/40 hover:scale-110"
             aria-label="Next slide"
           >
             <svg
@@ -149,14 +161,14 @@ export default function HeroSlideshow({
 
       {/* Dots Indicator */}
       {slides.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 gap-3">
+        <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 gap-3">
           {slides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
               className={`h-3 rounded-full transition-all duration-300 ${
                 index === currentIndex
-                  ? "w-12 bg-white"
+                  ? "w-12 bg-white shadow-lg"
                   : "w-3 bg-white/50 hover:bg-white/75"
               }`}
               aria-label={`Go to slide ${index + 1}`}

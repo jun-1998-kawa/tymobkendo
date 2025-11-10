@@ -25,6 +25,7 @@ export default function SiteConfigPage() {
   const [heroImagePaths, setHeroImagePaths] = useState<string[]>([]);
   const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
   const [heroSlideInterval, setHeroSlideInterval] = useState(6000);
+  const [useHeroSlides, setUseHeroSlides] = useState(false); // Phase 2: HeroSlideモデルを使用
   const [uploadingHero, setUploadingHero] = useState(false);
 
   // Welcome section
@@ -62,6 +63,7 @@ export default function SiteConfigPage() {
         setHeroTitle(activeConfig.heroTitle || "");
         setHeroSubtitle(activeConfig.heroSubtitle || "");
         setHeroSlideInterval(activeConfig.heroSlideInterval || 6000);
+        setUseHeroSlides(activeConfig.useHeroSlides || false);
         setWelcomeTitle(activeConfig.welcomeTitle || "");
         setWelcomeBody(activeConfig.welcomeBody || "");
         setCtaTitle(activeConfig.ctaTitle || "");
@@ -210,6 +212,7 @@ export default function SiteConfigPage() {
           heroSubtitle,
           heroImagePaths: heroImagePaths.length > 0 ? heroImagePaths : null,
           heroSlideInterval,
+          useHeroSlides,
           welcomeTitle,
           welcomeBody,
           featuresJson,
@@ -224,6 +227,7 @@ export default function SiteConfigPage() {
           heroSubtitle,
           heroImagePaths: heroImagePaths.length > 0 ? heroImagePaths : null,
           heroSlideInterval,
+          useHeroSlides,
           welcomeTitle,
           welcomeBody,
           featuresJson,
@@ -320,10 +324,32 @@ export default function SiteConfigPage() {
               </p>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-primary-800">
-                スライドショー画像（最大4枚）
+            {/* Phase 2 Toggle */}
+            <div className="rounded-lg border-2 border-purple-200 bg-purple-50 p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useHeroSlides}
+                  onChange={(e) => setUseHeroSlides(e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-purple-300 text-purple-600 focus:ring-2 focus:ring-purple-500"
+                />
+                <div>
+                  <span className="text-sm font-semibold text-purple-900">
+                    🎬 Phase 2: 高度なスライド管理を使用
+                  </span>
+                  <p className="mt-1 text-xs text-purple-700">
+                    ONにすると「ヒーロースライド管理」ページでスライドごとにタイトル・動画対応・Ken Burnsエフェクトなど詳細設定が可能です。<br />
+                    OFFの場合は下記の画像アップロードを使用します（Phase 1）。
+                  </p>
+                </div>
               </label>
+            </div>
+
+            {!useHeroSlides && (
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-primary-800">
+                  スライドショー画像（最大4枚） - Phase 1
+                </label>
 
               {/* 画像プレビュー */}
               {heroImageUrls.length > 0 && (
@@ -366,6 +392,28 @@ export default function SiteConfigPage() {
                 ※ 現在 {heroImagePaths.length}/4枚　｜　複数選択可能（残り{4 - heroImagePaths.length}枚）
               </p>
             </div>
+            )}
+
+            {useHeroSlides && (
+              <div className="rounded-lg border-2 border-purple-200 bg-purple-50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">🎬</span>
+                  <span className="font-semibold text-purple-900">Phase 2 モードが有効です</span>
+                </div>
+                <p className="text-sm text-purple-700 mb-3">
+                  スライドの詳細設定は「ヒーロースライド管理」ページで行ってください。
+                </p>
+                <a
+                  href="/admin/hero-slides"
+                  className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-purple-700"
+                >
+                  <span>ヒーロースライド管理へ</span>
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </a>
+              </div>
+            )}
           </section>
 
           {/* Welcome Section */}

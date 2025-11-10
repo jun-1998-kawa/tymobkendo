@@ -65,6 +65,7 @@ const defaultFooter = {
 export default function Home() {
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
+  const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
   const [showContent, setShowContent] = useState(false);
@@ -91,28 +92,67 @@ export default function Home() {
             }
           }
 
-          // 複数ヒーロー画像のURL取得（優先）
-          if (config.heroImagePaths && config.heroImagePaths.length > 0) {
+          // Phase 2: HeroSlideモデルを使用する場合
+          if (config.useHeroSlides) {
             try {
-              const urlPromises = config.heroImagePaths.map(async (path: string) => {
-                const url = await getUrl({ path: `public/${path}` });
-                return url.url.toString();
+              const { data: slides } = await models.HeroSlide.list({
+                filter: { isActive: { eq: true } },
               });
-              const urls = await Promise.all(urlPromises);
-              setHeroImageUrls(urls);
+
+              if (slides && slides.length > 0) {
+                // order でソート
+                const sortedSlides = [...slides].sort((a: any, b: any) => a.order - b.order);
+
+                // メディアURLを取得
+                const slidesWithUrls = await Promise.all(
+                  sortedSlides.map(async (slide: any) => {
+                    try {
+                      const url = await getUrl({ path: `public/${slide.mediaPath}` });
+                      return {
+                        mediaPath: url.url.toString(),
+                        mediaType: slide.mediaType,
+                        title: slide.title,
+                        subtitle: slide.subtitle,
+                        kenBurnsEffect: slide.kenBurnsEffect,
+                      };
+                    } catch (e) {
+                      console.error("Failed to load slide media:", e);
+                      return null;
+                    }
+                  })
+                );
+
+                setHeroSlides(slidesWithUrls.filter((s) => s !== null));
+              }
             } catch (e) {
-              console.error("Failed to load hero images:", e);
+              console.error("Failed to load hero slides:", e);
             }
           }
-          // 後方互換性: 単一画像パスのフォールバック
-          else if (config.heroImagePath) {
-            try {
-              const url = await getUrl({
-                path: `public/${config.heroImagePath}`,
-              });
-              setHeroImageUrls([url.url.toString()]);
-            } catch (e) {
-              console.error("Failed to load hero image:", e);
+          // Phase 1: 従来の方式（heroImagePaths配列）
+          else {
+            // 複数ヒーロー画像のURL取得（優先）
+            if (config.heroImagePaths && config.heroImagePaths.length > 0) {
+              try {
+                const urlPromises = config.heroImagePaths.map(async (path: string) => {
+                  const url = await getUrl({ path: `public/${path}` });
+                  return url.url.toString();
+                });
+                const urls = await Promise.all(urlPromises);
+                setHeroImageUrls(urls);
+              } catch (e) {
+                console.error("Failed to load hero images:", e);
+              }
+            }
+            // 後方互換性: 単一画像パスのフォールバック
+            else if (config.heroImagePath) {
+              try {
+                const url = await getUrl({
+                  path: `public/${config.heroImagePath}`,
+                });
+                setHeroImageUrls([url.url.toString()]);
+              } catch (e) {
+                console.error("Failed to load hero image:", e);
+              }
             }
           }
         }
@@ -138,14 +178,20 @@ export default function Home() {
     );
   }
 
-  // データを取得（SiteConfigがあればそれを使用、なければデフォルト値）
-  const heroSlides = siteConfig && heroImageUrls.length > 0
-    ? heroImageUrls.map(url => ({
-        image: url,
-        title: siteConfig.heroTitle || defaultHeroSlides[0].title,
-        subtitle: siteConfig.heroSubtitle || defaultHeroSlides[0].subtitle,
-      }))
-    : defaultHeroSlides;
+  // データを取得（Phase 2 or Phase 1 or デフォルト値）
+  const slides =
+    // Phase 2: HeroSlideモデルのデータがある場合
+    heroSlides.length > 0
+      ? heroSlides
+      // Phase 1: heroImagePathsがある場合
+      : siteConfig && heroImageUrls.length > 0
+      ? heroImageUrls.map(url => ({
+          image: url,
+          title: siteConfig.heroTitle || defaultHeroSlides[0].title,
+          subtitle: siteConfig.heroSubtitle || defaultHeroSlides[0].subtitle,
+        }))
+      // デフォルト値
+      : defaultHeroSlides;
 
   const slideInterval = siteConfig?.heroSlideInterval || 6000;
 
@@ -165,7 +211,7 @@ export default function Home() {
         className="min-h-screen"
       >
       {/* Hero Slideshow Section */}
-      <HeroSlideshow slides={heroSlides} height="70vh" autoPlayInterval={slideInterval} />
+      <HeroSlideshow slides={slides} height="70vh" autoPlayInterval={slideInterval} />
 
       {/* News Section */}
       <NewsSection />

@@ -7,6 +7,22 @@ import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 export default function AdminDashboard() {
   const adminLinks = [
     {
+      href: "/admin/site-config",
+      icon: "⚙️",
+      title: "サイト設定",
+      description: "トップページのコンテンツを一括編集",
+      count: null,
+      color: "from-indigo-500 to-indigo-600",
+    },
+    {
+      href: "/admin/hero-slides",
+      icon: "🎬",
+      title: "ヒーロースライド管理",
+      description: "トップページのスライドショーを管理",
+      count: null,
+      color: "from-purple-500 to-purple-600",
+    },
+    {
       href: "/admin/news",
       icon: "📰",
       title: "ニュース管理",
@@ -36,7 +52,7 @@ export default function AdminDashboard() {
       title: "掲示板モデレーション",
       description: "会員掲示板の投稿を監視・管理",
       count: null,
-      color: "from-purple-500 to-purple-600",
+      color: "from-red-500 to-red-600",
     },
   ];
 
@@ -64,7 +80,7 @@ export default function AdminDashboard() {
           </h2>
         </FadeIn>
 
-        <Stagger staggerDelay={0.15} className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+        <Stagger staggerDelay={0.15} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {adminLinks.map((link, index) => (
             <StaggerItem key={link.href}>
               <AdminCard {...link} delay={index * 0.1} />

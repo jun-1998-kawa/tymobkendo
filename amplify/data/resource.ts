@@ -105,6 +105,23 @@ const schema = a.schema({
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
+  // ヒーロースライド（Phase 2: スライドショー高度化）
+  HeroSlide: a
+    .model({
+      order: a.integer().required(), // 表示順序（昇順）
+      mediaPath: a.string().required(), // 画像 or 動画のS3パス
+      mediaType: a.enum(["image", "video"]), // メディアタイプ
+      title: a.string(), // スライドごとのタイトル（オプション）
+      subtitle: a.string(), // サブタイトル（オプション）
+      isActive: a.boolean().default(true), // 表示/非表示
+      kenBurnsEffect: a.boolean().default(false), // Ken Burnsエフェクト有効化
+    })
+    .authorization((allow) => [
+      allow.guest().to(["read"]), // 公開ページで誰でも閲覧可能
+      allow.authenticated().to(["read"]),
+      allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
+    ]),
+
   // サイト設定（トップページのコンテンツ管理）
   SiteConfig: a
     .model({
@@ -112,8 +129,9 @@ const schema = a.schema({
       heroTitle: a.string().required(),
       heroSubtitle: a.string().required(),
       heroImagePath: a.string(), // S3のパス（後方互換性のため残す、非推奨）
-      heroImagePaths: a.string().array(), // 複数画像パス（スライドショー用）
+      heroImagePaths: a.string().array(), // 複数画像パス（スライドショー用、Phase 1）
       heroSlideInterval: a.integer().default(6000), // スライド切替間隔（ms）
+      useHeroSlides: a.boolean().default(false), // HeroSlideモデルを使用するか（Phase 2）
 
       // Welcomeセクション
       welcomeTitle: a.string().required(),

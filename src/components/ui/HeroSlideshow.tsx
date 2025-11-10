@@ -5,9 +5,12 @@ import Image from "next/image";
 import HeroNavigation from "@/components/HeroNavigation";
 
 interface Slide {
-  image: string;
+  image?: string; // 後方互換性のため残す（Phase 1）
+  mediaPath?: string; // Phase 2: 画像または動画のパス
+  mediaType?: "image" | "video"; // Phase 2: メディアタイプ
   title?: string;
   subtitle?: string;
+  kenBurnsEffect?: boolean; // Phase 2: Ken Burnsエフェクト有効化
 }
 
 interface HeroSlideshowProps {
@@ -63,17 +66,41 @@ export default function HeroSlideshow({
           transition={{ duration: 1.2, ease: "easeInOut" }}
           className="absolute inset-0"
         >
-          {/* Background Image with High Quality */}
+          {/* Background Media (Image or Video) with High Quality */}
           <div className="relative h-full w-full">
-            <Image
-              src={slides[currentIndex].image}
-              alt={slides[currentIndex].title || `Slide ${currentIndex + 1}`}
-              fill
-              quality={95}
-              sizes="100vw"
-              className="object-cover"
-              priority={currentIndex === 0}
-            />
+            {(() => {
+              const currentSlide = slides[currentIndex];
+              const mediaPath = currentSlide.mediaPath || currentSlide.image;
+              const mediaType = currentSlide.mediaType || "image";
+              const hasKenBurns = currentSlide.kenBurnsEffect || false;
+
+              if (mediaType === "video" && mediaPath) {
+                return (
+                  <video
+                    key={mediaPath}
+                    src={mediaPath}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                );
+              } else if (mediaPath) {
+                return (
+                  <Image
+                    src={mediaPath}
+                    alt={currentSlide.title || `Slide ${currentIndex + 1}`}
+                    fill
+                    quality={95}
+                    sizes="100vw"
+                    className={`object-cover ${hasKenBurns ? 'animate-ken-burns' : ''}`}
+                    priority={currentIndex === 0}
+                  />
+                );
+              }
+              return null;
+            })()}
             {/* Enhanced gradient overlay - darker at top for navigation readability */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/30 to-black/60" />
           </div>

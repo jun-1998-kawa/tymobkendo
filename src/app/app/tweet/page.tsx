@@ -225,7 +225,7 @@ export default function TweetPage() {
           <div className="flex-1 min-w-0">
             {/* Reply To Indicator */}
             {replyTo && (
-              <div className="mb-2 text-sm text-gray-500 bg-gray-50 p-2 rounded flex items-center justify-between">
+              <div className="mb-2 text-sm text-gray-500 bg-gray-50 p-2 flex items-center justify-between border border-gray-200">
                 <span>
                   <span className="text-blue-600">@{replyTo.author}</span> へのリプライ
                 </span>
@@ -250,7 +250,7 @@ export default function TweetPage() {
 
             {/* Image Preview Grid */}
             {imagePaths.length > 0 && (
-              <div className={`mt-3 rounded-2xl overflow-hidden border border-gray-200 ${
+              <div className={`mt-3 overflow-hidden border border-gray-200 ${
                 imagePaths.length === 1 ? 'grid-cols-1' :
                 imagePaths.length === 2 ? 'grid grid-cols-2 gap-0.5' :
                 imagePaths.length === 3 ? 'grid grid-cols-2 gap-0.5' :
@@ -266,12 +266,12 @@ export default function TweetPage() {
                     }`}
                   >
                     <div className="flex h-full w-full items-center justify-center">
-                      <span className="text-4xl">🖼️</span>
+                      <span className="text-sm text-gray-500">画像</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(index)}
-                      className="absolute right-2 top-2 rounded-full bg-gray-900/75 p-1.5 text-white hover:bg-gray-900"
+                      className="absolute right-2 top-2 bg-gray-900/75 p-1.5 text-white hover:bg-gray-900"
                       title="削除"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -309,30 +309,14 @@ export default function TweetPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                {/* Character Counter Circle */}
+                {/* Character Counter */}
                 {content.length > 0 && (
-                  <div className="relative">
-                    <svg className="h-8 w-8 -rotate-90 transform">
-                      <circle cx="16" cy="16" r="14" stroke="#E1E8ED" strokeWidth="3" fill="none" />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="14"
-                        stroke={content.length > max ? "#f91880" : content.length > max * 0.9 ? "#ffad1f" : "#1DA1F2"}
-                        strokeWidth="3"
-                        fill="none"
-                        strokeDasharray={`${2 * Math.PI * 14}`}
-                        strokeDashoffset={`${2 * Math.PI * 14 * (1 - Math.min(charPercentage, 100) / 100)}`}
-                        className="transition-all duration-300"
-                      />
-                    </svg>
-                    {content.length > max * 0.9 && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-xs font-semibold" style={{ color: content.length > max ? "#f91880" : "#ffad1f" }}>
-                          {max - content.length}
-                        </span>
-                      </div>
-                    )}
+                  <div className={`text-sm font-medium ${
+                    content.length > max ? "text-red-600" :
+                    content.length > max * 0.9 ? "text-orange-600" :
+                    "text-gray-500"
+                  }`}>
+                    {content.length}/{max}
                   </div>
                 )}
 
@@ -340,10 +324,10 @@ export default function TweetPage() {
                 <button
                   disabled={disabled || loading || uploading}
                   onClick={handlePost}
-                  className={`rounded-full px-5 py-2 font-bold text-sm transition ${
+                  className={`px-5 py-2 font-medium text-sm transition ${
                     disabled || loading || uploading
-                      ? "bg-blue-300 text-white cursor-not-allowed"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
                   }`}
                 >
                   {loading ? "投稿中..." : replyTo ? "返信" : "ポスト"}
@@ -358,7 +342,7 @@ export default function TweetPage() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-3 rounded-lg bg-green-50 p-3 text-green-800 text-sm border border-green-200"
+                  className="mt-3 bg-green-50 p-3 text-green-800 text-sm border border-green-200"
                 >
                   投稿しました
                 </motion.div>
@@ -369,7 +353,7 @@ export default function TweetPage() {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="mt-3 rounded-lg bg-red-50 p-3 text-red-800 text-sm border border-red-200"
+                  className="mt-3 bg-red-50 p-3 text-red-800 text-sm border border-red-200"
                 >
                   {error}
                 </motion.div>
@@ -556,7 +540,7 @@ function TweetCard({
 
           {/* Images Grid */}
           {imageUrls.length > 0 && (
-            <div className={`mt-3 rounded-2xl overflow-hidden border border-gray-200 ${
+            <div className={`mt-3 overflow-hidden border border-gray-200 ${
               imageUrls.length === 1 ? 'grid-cols-1' :
               imageUrls.length === 2 ? 'grid grid-cols-2 gap-0.5' :
               imageUrls.length === 3 ? 'grid grid-cols-2 gap-0.5' :
@@ -584,7 +568,7 @@ function TweetCard({
           )}
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-12 mt-3 text-gray-500">
+          <div className="flex items-center gap-8 mt-3 text-gray-500">
             {/* Reply Icon */}
             <button
               onClick={(e) => {
@@ -593,7 +577,7 @@ function TweetCard({
               }}
               className="flex items-center gap-2 group"
             >
-              <div className="flex items-center justify-center w-9 h-9 rounded-full group-hover:bg-blue-50 transition">
+              <div className="flex items-center justify-center p-2 group-hover:bg-blue-50 transition">
                 <svg className="h-5 w-5 group-hover:text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -605,15 +589,6 @@ function TweetCard({
               )}
             </button>
 
-            {/* Retweet Icon (placeholder) */}
-            <button className="flex items-center gap-2 group">
-              <div className="flex items-center justify-center w-9 h-9 rounded-full group-hover:bg-green-50 transition">
-                <svg className="h-5 w-5 group-hover:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-            </button>
-
             {/* Favorite Icon */}
             <button
               onClick={(e) => {
@@ -623,7 +598,7 @@ function TweetCard({
               disabled={favoriteLoading}
               className={`flex items-center gap-2 group ${favoriteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <div className="flex items-center justify-center w-9 h-9 rounded-full group-hover:bg-pink-50 transition">
+              <div className="flex items-center justify-center p-2 group-hover:bg-pink-50 transition">
                 <svg
                   className={`h-5 w-5 ${
                     isFavorited ? "text-pink-500 fill-pink-500" : "group-hover:text-pink-500"
@@ -650,7 +625,7 @@ function TweetCard({
               }}
               className="flex items-center gap-2 group ml-auto"
             >
-              <div className="flex items-center justify-center w-9 h-9 rounded-full group-hover:bg-red-50 transition">
+              <div className="flex items-center justify-center p-2 group-hover:bg-red-50 transition">
                 <svg className="h-5 w-5 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>

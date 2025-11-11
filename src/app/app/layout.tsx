@@ -56,7 +56,7 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
     >
       {({ signOut, user }) => {
         return (
-          <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">
+          <div className="flex min-h-screen flex-col bg-gray-50">
             <Header signOut={signOut} userEmail={user?.signInDetails?.loginId} user={user} />
             <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
             <Footer />
@@ -88,16 +88,16 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
 
   const navItems = useMemo(() => {
     const items = [
-      { href: "/app", label: "ダッシュボード", icon: "🏠" },
-      { href: "/app/tweet", label: "近況投稿", icon: "💬" },
-      { href: "/app/favorites", label: "お気に入り", icon: "💗" },
-      { href: "/app/board", label: "掲示板", icon: "📋" },
-      { href: "/app/history", label: "歴史", icon: "📜" },
+      { href: "/app", label: "ダッシュボード" },
+      { href: "/app/tweet", label: "近況投稿" },
+      { href: "/app/favorites", label: "お気に入り" },
+      { href: "/app/board", label: "掲示板" },
+      { href: "/app/history", label: "歴史" },
     ];
 
     // 管理者の場合は管理ページを追加
     if (isAdmin) {
-      items.push({ href: "/admin", label: "管理", icon: "⚙️" });
+      items.push({ href: "/admin", label: "管理" });
     }
 
     return items;
@@ -106,23 +106,15 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
   const isActive = (href: string) => pathname === href || (href === "/admin" && pathname.startsWith("/admin"));
 
   return (
-    <header className="sticky top-0 z-50 border-b border-primary-200 bg-white/95 shadow-md backdrop-blur-sm">
-      <div className="mx-auto max-w-7xl px-4 py-4">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+      <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Title */}
           <Link
             href="/app"
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
+            className="text-base font-semibold text-gray-900 hover:text-gray-700"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-accent-600 to-gold-600 text-xl font-bold text-white shadow-md">
-              戸
-            </div>
-            <div>
-              <h1 className="font-serif text-lg font-bold text-primary-800">
-                戸山剣道部OB会
-              </h1>
-              <p className="text-xs text-primary-500">会員ページ</p>
-            </div>
+            戸山剣道部OB会
           </Link>
 
           {/* Desktop Navigation */}
@@ -131,27 +123,25 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-all duration-200 ${
+                className={`px-3 py-2 text-sm font-medium transition-colors ${
                   isActive(item.href)
-                    ? "bg-gradient-to-r from-accent-600 to-accent-700 text-white shadow-md"
-                    : "text-primary-700 hover:bg-primary-100"
+                    ? "bg-gray-900 text-white"
+                    : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
-                <span>{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                {item.label}
               </Link>
             ))}
           </nav>
 
           {/* User Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="hidden text-right md:block">
-              <p className="text-sm font-medium text-primary-800">{userEmail}</p>
-              <p className="text-xs text-primary-500">{isAdmin ? "管理者" : "会員"}</p>
+              <p className="text-xs text-gray-600">{userEmail}</p>
             </div>
             <button
               onClick={signOut}
-              className="rounded-lg border-2 border-accent-600 bg-white px-4 py-2 font-semibold text-accent-600 transition-all duration-200 hover:bg-accent-600 hover:text-white"
+              className="border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
               ログアウト
             </button>
@@ -159,19 +149,18 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
         </div>
 
         {/* Mobile Navigation */}
-        <nav className="mt-4 flex gap-2 overflow-x-auto md:hidden">
+        <nav className="mt-3 flex gap-2 overflow-x-auto md:hidden">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm transition-all duration-200 ${
+              className={`flex-shrink-0 px-3 py-2 text-xs font-medium transition-colors ${
                 isActive(item.href)
-                  ? "bg-gradient-to-r from-accent-600 to-accent-700 text-white shadow-md"
-                  : "bg-primary-100 text-primary-700 hover:bg-primary-200"
+                  ? "bg-gray-900 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
             >
-              <span>{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
+              {item.label}
             </Link>
           ))}
         </nav>
@@ -182,8 +171,8 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
 
 function Footer() {
   return (
-    <footer className="border-t border-primary-200 bg-white px-4 py-6 text-center">
-      <p className="text-sm text-primary-500">
+    <footer className="border-t border-gray-200 bg-white px-4 py-4 text-center">
+      <p className="text-xs text-gray-500">
         © 2024 戸山高校剣道部OB会. All rights reserved.
       </p>
     </footer>

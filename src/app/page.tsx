@@ -26,36 +26,36 @@ const defaultHeroSlides = [
   {
     image: "/kosha.jpg",
     title: "戸山高校剣道部OB会",
-    subtitle: "伝統を継承し、絆を深める",
+    subtitle: "",
   },
 ];
 
 const defaultWelcome = {
-  title: "ようこそ",
-  body: "戸山高校剣道部OB会の公式サイトへようこそ。\nこのサイトは、OB会員の皆様が交流し、思い出を共有し、\n母校剣道部の伝統を次世代へ繋いでいくための場所です。",
+  title: "戸山高校剣道部OB会",
+  body: "会員向けサイトです。",
 };
 
 const defaultFeatures: Feature[] = [
   {
-    icon: "💬",
+    icon: "",
     title: "近況投稿",
-    description: "140文字で気軽に近況を共有。会員同士のコミュニケーションを活性化します。",
+    description: "140文字で近況を投稿できます。",
   },
   {
-    icon: "📋",
+    icon: "",
     title: "掲示板",
-    description: "スレッド形式でディスカッション。重要な情報はピン留めで常に上位表示。",
+    description: "スレッド形式で情報交換ができます。",
   },
   {
-    icon: "📜",
+    icon: "",
     title: "歴史アーカイブ",
-    description: "戸山高校剣道部の歴史を振り返る。公開情報と会員限定情報を管理。",
+    description: "剣道部の歴史を閲覧できます。",
   },
 ];
 
 const defaultCTA = {
-  title: "会員の皆様へ",
-  body: "ログインして、懐かしい仲間との交流をお楽しみください。\n戸山剣道部の思い出を共有し、絆を深めましょう。",
+  title: "会員ログイン",
+  body: "",
 };
 
 const defaultFooter = {
@@ -216,36 +216,37 @@ export default function Home() {
       {/* News Section */}
       <NewsSection />
 
-      {/* Welcome Section with Negative Space */}
+      {/* Welcome Section */}
       <section className="bg-white px-4 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
-            <h2 className="mb-6 font-serif text-4xl font-bold text-primary-800 md:text-5xl">
+            <h2 className="mb-6 text-3xl font-bold text-gray-900 md:text-4xl">
               {welcomeTitle}
             </h2>
-            <p className="mb-8 text-lg leading-relaxed text-primary-600 md:text-xl">
-              {welcomeBody.split("\n").map((line: string, i: number) => (
-                <span key={i}>
-                  {line}
-                  {i < welcomeBody.split("\n").length - 1 && <br />}
-                </span>
-              ))}
-            </p>
+            {welcomeBody && (
+              <p className="mb-8 text-base leading-relaxed text-gray-600 md:text-lg">
+                {welcomeBody.split("\n").map((line: string, i: number) => (
+                  <span key={i}>
+                    {line}
+                    {i < welcomeBody.split("\n").length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            )}
           </FadeIn>
 
           <SlideIn direction="up" delay={0.3}>
-            <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/app"
-                className="group relative inline-flex items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-accent-600 to-accent-700 px-10 py-4 text-lg font-semibold text-white shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                className="inline-flex items-center justify-center bg-blue-600 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700"
               >
-                <span className="relative z-10">会員ページへ</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-accent-700 to-accent-800 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                会員ページへ
               </Link>
 
               <Link
                 href="#about"
-                className="inline-flex items-center justify-center rounded-full border-2 border-primary-800 px-10 py-4 text-lg font-semibold text-primary-800 transition-all duration-300 hover:bg-primary-800 hover:text-white"
+                className="inline-flex items-center justify-center border border-gray-300 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
               >
                 詳しく見る
               </Link>
@@ -254,25 +255,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section with Traditional Design */}
-      <section id="about" className="bg-gradient-to-b from-primary-50 to-white px-4 py-32">
+      {/* Features Section */}
+      <section id="about" className="bg-gray-50 px-4 py-20">
         <div className="mx-auto max-w-7xl">
           <FadeIn>
-            <div className="mb-20 text-center">
-              <div className="mb-4 inline-block border-b-4 border-accent-600 pb-2">
-                <h2 className="font-serif text-4xl font-bold text-primary-800 md:text-5xl">
-                  会員サービス
-                </h2>
-              </div>
-              <p className="mt-6 text-lg leading-relaxed text-primary-600">
-                OB会員の皆様が快適にご利用いただける
-                <br />
-                充実した機能をご用意しています
-              </p>
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
+                会員サービス
+              </h2>
             </div>
           </FadeIn>
 
-          <Stagger staggerDelay={0.2} className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <Stagger staggerDelay={0.2} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, index) => (
               <StaggerItem key={index}>
                 <FeatureCard
@@ -286,51 +280,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA Section with Traditional Accent */}
-      <section className="relative overflow-hidden bg-primary-900 px-4 py-32">
-        {/* Traditional Pattern Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_48%,currentColor_49%,currentColor_51%,transparent_52%),linear-gradient(-45deg,transparent_48%,currentColor_49%,currentColor_51%,transparent_52%)] bg-[length:20px_20px] text-white"></div>
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-4xl text-center">
+      {/* CTA Section */}
+      <section className="bg-gray-900 px-4 py-20">
+        <div className="mx-auto max-w-4xl text-center">
           <SlideIn direction="up">
-            <h2 className="mb-8 font-serif text-4xl font-bold text-white md:text-5xl">
+            <h2 className="mb-6 text-2xl font-bold text-white md:text-3xl">
               {ctaTitle}
             </h2>
-            <p className="mb-12 text-xl leading-relaxed text-primary-100">
-              {ctaBody.split("\n").map((line: string, i: number) => (
-                <span key={i}>
-                  {line}
-                  {i < ctaBody.split("\n").length - 1 && <br />}
-                </span>
-              ))}
-            </p>
+            {ctaBody && (
+              <p className="mb-8 text-base leading-relaxed text-gray-300">
+                {ctaBody.split("\n").map((line: string, i: number) => (
+                  <span key={i}>
+                    {line}
+                    {i < ctaBody.split("\n").length - 1 && <br />}
+                  </span>
+                ))}
+              </p>
+            )}
             <Link
               href="/app"
-              className="inline-flex items-center justify-center gap-3 rounded-full bg-gradient-to-r from-accent-600 to-accent-700 px-12 py-5 text-xl font-bold text-white shadow-2xl transition-all duration-300 hover:scale-105 hover:from-accent-700 hover:to-accent-800"
+              className="inline-flex items-center justify-center bg-blue-600 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700"
             >
-              <span>ログイン・会員ページへ</span>
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
+              ログイン・会員ページへ
             </Link>
           </SlideIn>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-primary-800 px-4 py-12 text-center text-primary-300">
+      <footer className="bg-gray-800 px-4 py-8 text-center text-gray-400">
         <p className="text-sm">{footerCopyright}</p>
       </footer>
       </motion.main>
@@ -338,7 +316,7 @@ export default function Home() {
   );
 }
 
-// Feature Card Component with Traditional Design
+// Feature Card Component
 function FeatureCard({
   icon,
   title,
@@ -349,24 +327,11 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <motion.div
-      whileHover={{ y: -8, scale: 1.02 }}
-      transition={{ duration: 0.3 }}
-      className="group relative overflow-hidden rounded-2xl border-2 border-primary-200 bg-white p-10 shadow-lg transition-all duration-300 hover:border-accent-300 hover:shadow-2xl"
-    >
-      {/* Accent Line */}
-      <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-accent-600 to-gold-600 transition-all duration-300 group-hover:w-2"></div>
-
-      <div className="relative">
-        <div className="mb-6 text-6xl">{icon}</div>
-        <h3 className="mb-4 font-serif text-2xl font-bold text-primary-800">
-          {title}
-        </h3>
-        <p className="leading-relaxed text-primary-600">{description}</p>
+    <div className="border border-gray-200 bg-white p-6 transition-colors hover:bg-gray-50">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
       </div>
-
-      {/* Hover Effect Background */}
-      <div className="absolute bottom-0 right-0 h-24 w-24 translate-x-8 translate-y-8 rounded-full bg-gradient-to-tl from-accent-100 to-gold-100 opacity-0 blur-2xl transition-all duration-500 group-hover:opacity-30"></div>
-    </motion.div>
+      <p className="text-sm text-gray-600">{description}</p>
+    </div>
   );
 }

@@ -211,7 +211,7 @@ export default function Home() {
         className="min-h-screen"
       >
       {/* Hero Slideshow Section */}
-      <HeroSlideshow slides={slides} height="70vh" autoPlayInterval={slideInterval} />
+      <HeroSlideshow slides={slides} autoPlayInterval={slideInterval} />
 
       {/* News Section */}
       <NewsSection />

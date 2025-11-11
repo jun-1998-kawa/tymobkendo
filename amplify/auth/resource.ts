@@ -4,5 +4,5 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
-  groups: ["MEMBERS", "ADMINS"],
+  groups: ["ADMINS", "MEMBERS"],  // ADMINSを先にして優先順位を上げる
 });

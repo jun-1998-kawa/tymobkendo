@@ -424,6 +424,7 @@ function TweetCard({
 }) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [showReplies, setShowReplies] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -467,10 +468,14 @@ function TweetCard({
   };
 
   const handleFavorite = async () => {
+    // 既にローディング中の場合は何もしない（連打防止）
+    if (favoriteLoading) return;
+
     const isFavorited = favorites.some(
       (f) => f.tweetId === tweet.id && f.owner === currentUserId
     );
 
+    setFavoriteLoading(true);
     try {
       if (isFavorited) {
         // いいねを取り消す
@@ -494,6 +499,8 @@ function TweetCard({
       }
     } catch (err) {
       console.error("Error toggling favorite:", err);
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -613,7 +620,8 @@ function TweetCard({
                 e.stopPropagation();
                 handleFavorite();
               }}
-              className="flex items-center gap-2 group"
+              disabled={favoriteLoading}
+              className={`flex items-center gap-2 group ${favoriteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <div className="flex items-center justify-center w-9 h-9 rounded-full group-hover:bg-pink-50 transition">
                 <svg

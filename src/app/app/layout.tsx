@@ -90,6 +90,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
     const items = [
       { href: "/app", label: "ダッシュボード", icon: "🏠" },
       { href: "/app/tweet", label: "近況投稿", icon: "💬" },
+      { href: "/app/favorites", label: "お気に入り", icon: "💗" },
       { href: "/app/board", label: "掲示板", icon: "📋" },
       { href: "/app/history", label: "歴史", icon: "📜" },
     ];

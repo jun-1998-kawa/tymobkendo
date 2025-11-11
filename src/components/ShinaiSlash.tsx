@@ -32,7 +32,7 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
     const timer = setTimeout(() => {
       setIsVisible(false);
       onComplete?.();
-    }, 2500);
+    }, 2200);
 
     return () => clearTimeout(timer);
   }, [onComplete, skipOnRevisit]);
@@ -46,7 +46,7 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-primary-900"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-gray-900"
           style={{ pointerEvents: isVisible ? "auto" : "none" }}
         >
           {/* Background pattern */}
@@ -112,10 +112,10 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
               }}
               className="relative text-center"
             >
-              <h1 className="mb-4 font-serif text-5xl font-bold text-white md:text-6xl lg:text-7xl">
+              <h1 className="mb-4 text-5xl font-bold text-white md:text-6xl lg:text-7xl">
                 戸山高校剣道部
               </h1>
-              <p className="text-2xl font-light text-amber-300 md:text-3xl">
+              <p className="text-2xl font-normal text-amber-300 md:text-3xl">
                 OB会
               </p>
 
@@ -137,7 +137,7 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
                 delay: 1.8,
                 ease: "easeInOut",
               }}
-              className="absolute left-0 top-0 h-1/2 w-full origin-top bg-primary-900"
+              className="absolute left-0 top-0 h-1/2 w-full origin-top bg-gray-900"
             />
             <motion.div
               initial={{ scaleY: 1 }}
@@ -147,7 +147,7 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
                 delay: 1.8,
                 ease: "easeInOut",
               }}
-              className="absolute bottom-0 left-0 h-1/2 w-full origin-bottom bg-primary-900"
+              className="absolute bottom-0 left-0 h-1/2 w-full origin-bottom bg-gray-900"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function ShinaiSlash({ onComplete, skipOnRevisit = true }: Shinai
               setIsVisible(false);
               onComplete?.();
             }}
-            className="absolute bottom-8 right-8 z-20 rounded-lg border border-amber-500/30 bg-primary-800/50 px-4 py-2 text-sm text-amber-300 backdrop-blur-sm transition-all hover:border-amber-500/50 hover:bg-primary-800/70"
+            className="absolute bottom-8 right-8 z-20 border border-amber-500/30 bg-gray-800/50 px-4 py-2 text-sm text-amber-300 backdrop-blur-sm transition-all hover:border-amber-500/50 hover:bg-gray-800/70"
           >
             スキップ
           </motion.button>

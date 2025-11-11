@@ -69,6 +69,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
   const [showContent, setShowContent] = useState(false);
+  const [splashComplete, setSplashComplete] = useState(false);
 
   useEffect(() => {
     const loadSiteConfig = async () => {
@@ -166,15 +167,17 @@ export default function Home() {
     loadSiteConfig();
   }, []);
 
-  // ローディング中は何も表示しない（またはスピナーを表示）
-  if (loading) {
+  // ローディングとスプラッシュの両方が完了したらコンテンツを表示
+  useEffect(() => {
+    if (!loading && splashComplete) {
+      setShowContent(true);
+    }
+  }, [loading, splashComplete]);
+
+  // ローディング中はShinaiSlashのみ表示
+  if (loading || !splashComplete) {
     return (
-      <>
-        <ShinaiSlash onComplete={() => setShowContent(true)} />
-        <main className="flex min-h-screen items-center justify-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-accent-600 border-t-transparent"></div>
-        </main>
-      </>
+      <ShinaiSlash onComplete={() => setSplashComplete(true)} />
     );
   }
 
@@ -203,11 +206,10 @@ export default function Home() {
 
   return (
     <>
-      <ShinaiSlash onComplete={() => setShowContent(true)} />
       <motion.main
         initial={{ opacity: 0 }}
-        animate={{ opacity: showContent ? 1 : 0 }}
-        transition={{ duration: 0.5 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="min-h-screen"
       >
       {/* Hero Slideshow Section */}

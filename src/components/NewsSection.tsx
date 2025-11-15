@@ -82,16 +82,14 @@ export default function NewsSection() {
   }
 
   return (
-    <section className="bg-gradient-to-b from-white to-primary-50 px-4 py-20">
+    <section className="bg-white px-4 py-20">
       <div className="mx-auto max-w-7xl">
         <FadeIn>
           <div className="mb-12 text-center">
-            <div className="mb-4 inline-block border-b-4 border-blue-600 pb-2">
-              <h2 className="font-serif text-4xl font-bold text-primary-800">
-                お知らせ
-              </h2>
-            </div>
-            <p className="mt-4 text-lg text-primary-600">
+            <h2 className="mb-2 text-4xl font-bold text-gray-900">
+              お知らせ
+            </h2>
+            <p className="text-base text-gray-600">
               最新のニュース・イベント・活動報告
             </p>
           </div>
@@ -126,73 +124,60 @@ function NewsCard({ news }: { news: any }) {
   return (
     <Link href={`/news/${news.id}`}>
       <motion.div
-        whileHover={{ scale: 1.01, y: -4 }}
-        transition={{ duration: 0.2 }}
-        className="group relative overflow-hidden rounded-xl border-2 border-primary-200 bg-white shadow-lg transition-all duration-300 hover:border-blue-300 hover:shadow-2xl cursor-pointer"
+        whileHover={{ x: 4 }}
+        transition={{ duration: 0.15 }}
+        className="group border-l-4 border-blue-600 bg-white p-6 transition-all hover:bg-gray-50 cursor-pointer"
       >
-        {/* Top Border Accent */}
-        <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          {/* Category Badge */}
+          <span
+            className={`inline-flex items-center gap-1 border ${categoryStyle.border} ${categoryStyle.bg} px-2 py-1 text-xs font-semibold uppercase tracking-wide ${categoryStyle.text}`}
+          >
+            {news.category}
+          </span>
 
-        <div className="p-6 md:p-8">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            {/* Category Badge */}
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border ${categoryStyle.border} ${categoryStyle.bg} px-3 py-1 text-sm font-semibold ${categoryStyle.text}`}
-            >
-              <span>
-                {news.category === "お知らせ" && "📢"}
-                {news.category === "イベント" && "📅"}
-                {news.category === "活動報告" && "📝"}
-              </span>
-              {news.category}
+          {/* Pin Badge */}
+          {news.isPinned && (
+            <span className="inline-flex items-center gap-1 border border-amber-600 bg-amber-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              重要
             </span>
+          )}
 
-            {/* Pin Badge */}
-            {news.isPinned && (
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700">
-                📌 重要
-              </span>
-            )}
-
-            {/* Date */}
-            <span className="text-sm text-primary-500">
-              {publishDate.toLocaleDateString("ja-JP", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </span>
-          </div>
-
-          {/* Title */}
-          <h3 className="mb-3 font-serif text-2xl font-bold leading-tight text-primary-800 transition-colors group-hover:text-blue-700 md:text-3xl">
-            {news.title}
-          </h3>
-
-          {/* Excerpt */}
-          <p className="mb-4 leading-relaxed text-primary-600">{news.excerpt}</p>
-
-          {/* Read More Link */}
-          <div className="flex items-center gap-2 text-blue-600 transition-all group-hover:gap-3">
-            <span className="font-semibold">続きを読む</span>
-            <svg
-              className="h-5 w-5 transition-transform group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </div>
+          {/* Date */}
+          <span className="text-xs text-gray-500">
+            {publishDate.toLocaleDateString("ja-JP", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
         </div>
 
-        {/* Subtle Gradient Background on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 via-transparent to-indigo-50/0 opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+        {/* Title */}
+        <h3 className="mb-2 text-2xl font-bold text-gray-900 transition-colors group-hover:text-blue-600">
+          {news.title}
+        </h3>
+
+        {/* Excerpt */}
+        <p className="mb-3 text-gray-600">{news.excerpt}</p>
+
+        {/* Read More Link */}
+        <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
+          <span>続きを読む</span>
+          <svg
+            className="h-4 w-4 transition-transform group-hover:translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 7l5 5m0 0l-5 5m5-5H6"
+            />
+          </svg>
+        </div>
       </motion.div>
     </Link>
   );

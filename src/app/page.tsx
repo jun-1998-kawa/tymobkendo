@@ -9,16 +9,10 @@ import HeroSlideshow from "@/components/ui/HeroSlideshow";
 import NewsSection from "@/components/NewsSection";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
-import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 import ShinaiSlash from "@/components/ShinaiSlash";
 import outputs from "../../amplify_outputs.json";
 
 type SiteConfig = any;
-type Feature = {
-  icon: string;
-  title: string;
-  description: string;
-};
 
 // デフォルトのコンテンツ（フォールバック用）
 const defaultHeroSlides = [
@@ -34,29 +28,6 @@ const defaultWelcome = {
   body: "会員向けサイトです。",
 };
 
-const defaultFeatures: Feature[] = [
-  {
-    icon: "",
-    title: "近況投稿",
-    description: "140文字で近況を投稿できます。",
-  },
-  {
-    icon: "",
-    title: "掲示板",
-    description: "スレッド形式で情報交換ができます。",
-  },
-  {
-    icon: "",
-    title: "歴史アーカイブ",
-    description: "剣道部の歴史を閲覧できます。",
-  },
-];
-
-const defaultCTA = {
-  title: "会員ログイン",
-  body: "",
-};
-
 const defaultFooter = {
   copyright: "© 2024 戸山高校剣道部OB会. All rights reserved.",
 };
@@ -66,7 +37,6 @@ export default function Home() {
   const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
   const [showContent, setShowContent] = useState(false);
   const [splashComplete, setSplashComplete] = useState(false);
   const [amplifyReady, setAmplifyReady] = useState(false);
@@ -92,16 +62,6 @@ export default function Home() {
         if (configs && configs.length > 0) {
           const config = configs[0];
           setSiteConfig(config);
-
-          // featuresJsonをパース
-          if (config.featuresJson) {
-            try {
-              const parsedFeatures = JSON.parse(config.featuresJson);
-              setFeatures(parsedFeatures);
-            } catch (e) {
-              console.error("Failed to parse featuresJson:", e);
-            }
-          }
 
           // Phase 2: HeroSlideモデルを使用する場合
           if (config.useHeroSlides) {
@@ -226,8 +186,6 @@ export default function Home() {
 
   const welcomeTitle = siteConfig?.welcomeTitle || defaultWelcome.title;
   const welcomeBody = siteConfig?.welcomeBody || defaultWelcome.body;
-  const ctaTitle = siteConfig?.ctaTitle || defaultCTA.title;
-  const ctaBody = siteConfig?.ctaBody || defaultCTA.body;
   const footerCopyright = siteConfig?.footerCopyright || defaultFooter.copyright;
 
   return (
@@ -244,7 +202,7 @@ export default function Home() {
       {/* News Section */}
       <NewsSection />
 
-      {/* Welcome Section */}
+      {/* Welcome Section with Simple Login */}
       <section className="bg-white px-4 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
@@ -264,73 +222,14 @@ export default function Home() {
           </FadeIn>
 
           <SlideIn direction="up" delay={0.3}>
-            <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="mt-12">
               <Link
                 href="/app"
-                className="inline-flex items-center justify-center bg-blue-600 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                className="inline-flex items-center justify-center bg-blue-600 px-12 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg"
               >
-                会員ページへ
-              </Link>
-
-              <Link
-                href="#about"
-                className="inline-flex items-center justify-center border border-gray-300 bg-white px-8 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                詳しく見る
+                会員ログイン
               </Link>
             </div>
-          </SlideIn>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section id="about" className="bg-gray-50 px-4 py-20">
-        <div className="mx-auto max-w-7xl">
-          <FadeIn>
-            <div className="mb-12">
-              <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
-                会員サービス
-              </h2>
-            </div>
-          </FadeIn>
-
-          <Stagger staggerDelay={0.2} className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, index) => (
-              <StaggerItem key={index}>
-                <FeatureCard
-                  icon={feature.icon}
-                  title={feature.title}
-                  description={feature.description}
-                />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gray-900 px-4 py-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <SlideIn direction="up">
-            <h2 className="mb-6 text-2xl font-bold text-white md:text-3xl">
-              {ctaTitle}
-            </h2>
-            {ctaBody && (
-              <p className="mb-8 text-base leading-relaxed text-gray-300">
-                {ctaBody.split("\n").map((line: string, i: number) => (
-                  <span key={i}>
-                    {line}
-                    {i < ctaBody.split("\n").length - 1 && <br />}
-                  </span>
-                ))}
-              </p>
-            )}
-            <Link
-              href="/app"
-              className="inline-flex items-center justify-center bg-blue-600 px-8 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              ログイン・会員ページへ
-            </Link>
           </SlideIn>
         </div>
       </section>
@@ -341,25 +240,5 @@ export default function Home() {
       </footer>
       </motion.main>
     </>
-  );
-}
-
-// Feature Card Component
-function FeatureCard({
-  icon,
-  title,
-  description,
-}: {
-  icon: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="border border-gray-200 bg-white p-6 transition-colors hover:bg-gray-50">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-      </div>
-      <p className="text-sm text-gray-600">{description}</p>
-    </div>
   );
 }

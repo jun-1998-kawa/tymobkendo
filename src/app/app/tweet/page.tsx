@@ -455,42 +455,84 @@ function TweetCard({
     // 既にローディング中の場合は何もしない（連打防止）
     if (favoriteLoading) return;
 
-    const isFavorited = favorites.some(
-      (f) => f.tweetId === tweet.id && f.owner === currentUserId
+    // 現在のユーザーのお気に入りを検索
+    const userFavorites = favorites.filter(
+      (f) => f.tweetId === tweet.id
     );
+
+    // owner フィールドがない場合もあるため、全てのお気に入りをチェック
+    const myFavorite = userFavorites.find((f) => {
+      // owner が設定されている場合はそれで判定
+      if (f.owner) {
+        return f.owner === currentUserId;
+      }
+      // owner がない場合は、createdBy などの他のフィールドで判定
+      // Amplifyは自動的に owner フィールドを設定するはずですが、念のため
+      return true;
+    });
+
+    const isFavorited = !!myFavorite;
 
     setFavoriteLoading(true);
     try {
-      if (isFavorited) {
+      if (isFavorited && myFavorite) {
         // いいねを取り消す
-        const fav = favorites.find(
-          (f) => f.tweetId === tweet.id && f.owner === currentUserId
-        );
-        if (fav) {
-          await models.Favorite.delete({ id: fav.id });
-          await models.Tweet.update({
-            id: tweet.id,
-            favoriteCount: Math.max((tweet.favoriteCount || 0) - 1, 0),
-          });
-        }
-      } else {
-        // いいねする
-        await models.Favorite.create({ tweetId: tweet.id });
+        await models.Favorite.delete({ id: myFavorite.id });
+
+        // Tweet の favoriteCount を更新
+        const newCount = Math.max((tweet.favoriteCount || 0) - 1, 0);
         await models.Tweet.update({
           id: tweet.id,
-          favoriteCount: (tweet.favoriteCount || 0) + 1,
+          favoriteCount: newCount,
+        });
+      } else {
+        // 重複チェック: すでに同じtweetIdのお気に入りが存在しないか確認
+        const existingFav = favorites.find((f) => f.tweetId === tweet.id);
+        if (existingFav) {
+          console.warn("Favorite already exists for this tweet");
+          setFavoriteLoading(false);
+          return;
+        }
+
+        // 複合IDを生成して重複を防ぐ: {tweetId}#{userId}
+        const compositeId = `${tweet.id}#${currentUserId}`;
+
+        // いいねする（カスタムIDを使用）
+        await models.Favorite.create({
+          id: compositeId,
+          tweetId: tweet.id,
+        });
+
+        // Tweet の favoriteCount を更新
+        const newCount = (tweet.favoriteCount || 0) + 1;
+        await models.Tweet.update({
+          id: tweet.id,
+          favoriteCount: newCount,
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error toggling favorite:", err);
+      // エラーメッセージを表示（既に存在する場合など）
+      if (err.message?.includes("already exists") || err.message?.includes("duplicate")) {
+        console.warn("Duplicate favorite detected");
+      }
     } finally {
-      setFavoriteLoading(false);
+      // 少し遅延を入れてローディング状態を解除（observeQueryの更新を待つ）
+      setTimeout(() => {
+        setFavoriteLoading(false);
+      }, 300);
     }
   };
 
-  const isFavorited = favorites.some(
-    (f) => f.tweetId === tweet.id && f.owner === currentUserId
-  );
+  // お気に入り判定をより確実に
+  const userFavorites = favorites.filter((f) => f.tweetId === tweet.id);
+  const myFavorite = userFavorites.find((f) => {
+    if (f.owner) {
+      return f.owner === currentUserId;
+    }
+    return true; // owner がない場合は存在すると見なす
+  });
+  const isFavorited = !!myFavorite;
 
   // このツイートへのリプライを取得
   const replies = allTweets.filter((t) => t.replyToId === tweet.id);

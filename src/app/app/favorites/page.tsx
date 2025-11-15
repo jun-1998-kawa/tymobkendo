@@ -26,11 +26,23 @@ export default function FavoritesPage() {
         setCurrentUserId(user.userId);
 
         // 自分のお気に入りを取得
-        const favSub = models.Favorite.observeQuery({
-          filter: { owner: { eq: user.userId } },
-        }).subscribe({
+        // owner フィルターが機能しない場合に備えて、全て取得してからフィルター
+        const favSub = models.Favorite.observeQuery({}).subscribe({
           next: ({ items }: any) => {
-            setFavorites(items);
+            // 複合ID（{tweetId}#{userId}）を使用している場合は、IDから判定
+            const myFavorites = items.filter((fav: any) => {
+              // owner フィールドがある場合はそれで判定
+              if (fav.owner) {
+                return fav.owner === user.userId;
+              }
+              // カスタムIDを使用している場合は、ID末尾がuserIdと一致するか確認
+              if (fav.id && fav.id.includes('#')) {
+                const userId = fav.id.split('#')[1];
+                return userId === user.userId;
+              }
+              return false;
+            });
+            setFavorites(myFavorites);
           },
         });
 

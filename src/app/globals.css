@@ -43,3 +43,46 @@
     animation: ken-burns 20s ease-out forwards;
   }
 }
+
+/* Authenticator カスタムスタイル */
+@layer components {
+  /* ログイン/サインアップボタンを見やすく */
+  [data-amplify-authenticator] button[type="submit"] {
+    @apply min-h-[48px] text-base font-semibold;
+  }
+
+  /* タブを見やすく */
+  [data-amplify-authenticator] [data-amplify-router] {
+    @apply border-0 shadow-lg;
+  }
+
+  /* フォームフィールドのヘルプテキスト */
+  [data-amplify-authenticator] .amplify-field__description {
+    @apply mt-1 text-sm text-gray-600;
+  }
+
+  /* パスワードフィールドの下のヘルプテキスト */
+  [data-amplify-authenticator] input[type="password"] + .amplify-field__description {
+    @apply mt-2 rounded bg-blue-50 p-2 text-sm text-blue-700;
+  }
+
+  /* エラーメッセージ */
+  [data-amplify-authenticator] .amplify-field__error-message {
+    @apply mt-1 text-sm font-medium text-red-600;
+  }
+
+  /* ボタンのホバー効果 */
+  [data-amplify-authenticator] button[type="submit"]:hover {
+    @apply shadow-lg;
+  }
+
+  /* タブボタン */
+  [data-amplify-authenticator] [role="tab"] {
+    @apply text-base font-semibold;
+  }
+
+  /* アクティブなタブ */
+  [data-amplify-authenticator] [role="tab"][aria-selected="true"] {
+    @apply border-b-2 border-blue-600 text-blue-600;
+  }
+}

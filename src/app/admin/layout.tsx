@@ -1,13 +1,32 @@
 "use client";
-import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator, View, Text, Heading } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 
+// カスタムコンポーネント（管理者用）
+const components = {
+  SignIn: {
+    Header() {
+      return (
+        <View textAlign="center" padding="1rem">
+          <Heading level={3}>管理者ログイン</Heading>
+          <Text fontSize="0.875rem" color="red">
+            この画面は管理者専用です
+          </Text>
+        </View>
+      );
+    },
+  },
+};
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Authenticator>
+    <Authenticator
+      components={components}
+      hideSignUp={true}
+    >
       {({ signOut, user }) => <AdminGuard signOut={signOut} user={user}>{children}</AdminGuard>}
     </Authenticator>
   );
@@ -93,6 +112,8 @@ function AdminHeader({ signOut, userEmail }: { signOut?: () => void; userEmail?:
 
   const navItems = [
     { href: "/admin", label: "ダッシュボード", icon: "🏠" },
+    { href: "/admin/hero-slides", label: "スライド管理", icon: "🖼️" },
+    { href: "/admin/site-config", label: "サイト設定", icon: "⚙️" },
     { href: "/admin/news", label: "ニュース管理", icon: "📰" },
     { href: "/admin/pages", label: "ページ管理", icon: "📄" },
     { href: "/admin/history", label: "歴史管理", icon: "📜" },

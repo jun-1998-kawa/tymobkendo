@@ -1,5 +1,5 @@
 "use client";
-import { Authenticator, useAuthenticator } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator, View, Text, Heading } from "@aws-amplify/ui-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -38,6 +38,7 @@ const formFields = {
       label: "パスワード",
       placeholder: "パスワードを入力",
       isRequired: true,
+      helpText: "8文字以上、大文字・小文字・数字・記号を含める必要があります",
     },
     confirm_password: {
       order: 6,
@@ -48,11 +49,84 @@ const formFields = {
   },
 };
 
+// カスタムコンポーネント
+const components = {
+  SignUp: {
+    Header() {
+      return (
+        <View textAlign="center" padding="1rem">
+          <Heading level={3}>新規登録</Heading>
+        </View>
+      );
+    },
+    Footer() {
+      return (
+        <View textAlign="center" padding="1rem">
+          <Text fontSize="0.875rem" color="gray">
+            登録後、<strong>no-reply@verificationemail.com</strong> から確認メールが送信されます。
+            <br />
+            メールに記載された確認コードを入力してください。
+          </Text>
+        </View>
+      );
+    },
+  },
+  SignIn: {
+    Header() {
+      return (
+        <View textAlign="center" padding="1rem">
+          <Heading level={3}>ログイン</Heading>
+        </View>
+      );
+    },
+  },
+};
+
+// 日本語テキスト
+const translations = {
+  ja: {
+    "Sign In": "ログイン",
+    "Sign Up": "新規登録",
+    "Sign Out": "ログアウト",
+    "Sign in": "ログイン",
+    "Sign up": "新規登録",
+    "Username": "ユーザー名",
+    "Password": "パスワード",
+    "Email": "メールアドレス",
+    "Phone Number": "電話番号",
+    "Confirm Password": "パスワード（確認）",
+    "Code": "確認コード",
+    "Confirmation Code": "確認コード",
+    "Lost your code?": "コードを紛失しましたか？",
+    "Resend Code": "コードを再送信",
+    "Submit": "送信",
+    "Back to Sign In": "ログインに戻る",
+    "Send Code": "コードを送信",
+    "Confirm": "確認",
+    "Create Account": "アカウント作成",
+    "Forgot your password?": "パスワードをお忘れですか？",
+    "Reset Password": "パスワードリセット",
+    "Enter your username": "ユーザー名を入力",
+    "Enter your password": "パスワードを入力",
+    "Confirm Sign Up": "サインアップ確認",
+    "Confirming": "確認中",
+    "Signing in": "ログイン中",
+    "We Emailed You": "メールを送信しました",
+    "Your code is on the way. To log in, enter the code we emailed to":
+      "確認コードを送信しました。以下のメールアドレスに届いたコードを入力してください：",
+    "It may take a minute to arrive.": "メールが届くまで少し時間がかかる場合があります。",
+  },
+};
+
 export default function MembersLayout({ children }: { children: React.ReactNode }) {
   return (
     <Authenticator
       formFields={formFields}
       signUpAttributes={["given_name", "family_name", "custom:graduationYear"] as any}
+      components={components}
+      // @ts-ignore
+      variation="default"
+      hideSignUp={false}
     >
       {({ signOut, user }) => {
         return (

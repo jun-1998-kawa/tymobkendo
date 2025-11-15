@@ -11,10 +11,10 @@ export const storage = defineStorage({
       allow.groups(["ADMINS"]).to(["read", "write", "delete"]),
     ],
 
-    // 会員の投稿画像（本人RWX、会員は読み書き削除可能）
+    // 会員の投稿画像（本人RWX、認証済みユーザーは閲覧可能）
     "members/{entity_id}/*": [
-      allow.entity("identity").to(["read", "write", "delete"]),
-      allow.groups(["MEMBERS", "ADMINS"]).to(["read", "write", "delete"]),
+      allow.entity("identity").to(["read", "write", "delete"]), // 自分のフォルダは自由に操作
+      allow.authenticated.to(["read"]), // 他のユーザーの画像も閲覧可能（Tweet・掲示板で必要）
     ],
 
     // 掲示板/Tweetの共通参照用（必要に応じて使用）

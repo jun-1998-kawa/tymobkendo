@@ -18,7 +18,10 @@ export default function NewsSection() {
       // Configure Amplify
       Amplify.configure(outputs, { ssr: true });
 
-      const client = generateClient();
+      // ゲストアクセス用のクライアント（APIキーモード）
+      const client = generateClient({
+        authMode: 'apiKey'
+      });
       const models = client.models as any;
 
       // Check if News model exists

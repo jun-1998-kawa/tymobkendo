@@ -11,7 +11,10 @@ import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 import ShinaiSlash from "@/components/ShinaiSlash";
 
-const client = generateClient();
+// ゲストアクセス用のクライアント（APIキーモード）
+const client = generateClient({
+  authMode: 'apiKey'
+});
 const models = client.models as any;
 
 type SiteConfig = any;

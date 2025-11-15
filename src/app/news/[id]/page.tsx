@@ -132,9 +132,9 @@ export default function NewsDetailPage() {
   const publishDate = new Date(news.publishedAt || news.createdAt);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50">
+    <main className="min-h-screen bg-white">
       {/* Header Navigation */}
-      <nav className="border-b border-primary-200 bg-white shadow-sm">
+      <nav className="border-b border-gray-200 bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <Link
             href="/"
@@ -166,25 +166,20 @@ export default function NewsDetailPage() {
             <div className="mb-6 flex flex-wrap items-center gap-3">
               {/* Category Badge */}
               <span
-                className={`inline-flex items-center gap-1 rounded-full border ${categoryStyle.border} ${categoryStyle.bg} px-4 py-2 text-sm font-semibold ${categoryStyle.text}`}
+                className={`inline-flex items-center border ${categoryStyle.border} ${categoryStyle.bg} px-2 py-1 text-xs font-semibold uppercase tracking-wide ${categoryStyle.text}`}
               >
-                <span>
-                  {news.category === "お知らせ" && "📢"}
-                  {news.category === "イベント" && "📅"}
-                  {news.category === "活動報告" && "📝"}
-                </span>
                 {news.category}
               </span>
 
               {/* Pin Badge */}
               {news.isPinned && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-700">
-                  📌 重要
+                <span className="inline-flex items-center border border-amber-600 bg-amber-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                  重要
                 </span>
               )}
 
               {/* Date */}
-              <span className="text-sm text-primary-500">
+              <span className="text-xs text-gray-500">
                 {publishDate.toLocaleDateString("ja-JP", {
                   year: "numeric",
                   month: "long",
@@ -193,18 +188,18 @@ export default function NewsDetailPage() {
               </span>
             </div>
 
-            <h1 className="mb-6 font-serif text-4xl font-bold leading-tight text-primary-800 md:text-5xl">
+            <h1 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
               {news.title}
             </h1>
 
-            <p className="text-xl leading-relaxed text-primary-600">
+            <p className="text-xl leading-relaxed text-gray-600">
               {news.excerpt}
             </p>
           </header>
         </FadeIn>
 
         {/* Divider */}
-        <div className="mb-12 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-transparent"></div>
+        <div className="mb-12 h-px bg-gray-300"></div>
 
         {/* Images Gallery */}
         {imageUrls.length > 0 && (
@@ -214,7 +209,7 @@ export default function NewsDetailPage() {
                 {imageUrls.map((url, index) => (
                   <div
                     key={index}
-                    className="relative overflow-hidden rounded-2xl border border-primary-200 shadow-lg transition-all hover:shadow-2xl"
+                    className="relative overflow-hidden border border-gray-200 shadow-lg transition-all hover:shadow-2xl"
                     style={{ minHeight: '300px' }}
                   >
                     <Image
@@ -234,37 +229,37 @@ export default function NewsDetailPage() {
         {/* Main Content */}
         <SlideIn direction="up" delay={imageUrls.length > 0 ? 0.4 : 0.2}>
           <div className="prose prose-lg max-w-none">
-            <div className="rounded-2xl border border-primary-200 bg-white p-8 shadow-lg md:p-12">
+            <div className="border border-gray-200 bg-white p-8 shadow-lg md:p-12">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                   h1: ({ children }) => (
-                    <h1 className="mb-4 mt-8 font-serif text-3xl font-bold text-primary-800 first:mt-0">
+                    <h1 className="mb-4 mt-8 font-serif text-3xl font-bold text-gray-900 first:mt-0">
                       {children}
                     </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="mb-3 mt-6 font-serif text-2xl font-bold text-primary-800 first:mt-0">
+                    <h2 className="mb-3 mt-6 font-serif text-2xl font-bold text-gray-900 first:mt-0">
                       {children}
                     </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="mb-2 mt-4 font-serif text-xl font-bold text-primary-800 first:mt-0">
+                    <h3 className="mb-2 mt-4 font-serif text-xl font-bold text-gray-900 first:mt-0">
                       {children}
                     </h3>
                   ),
                   p: ({ children }) => (
-                    <p className="mb-4 leading-relaxed text-primary-700">
+                    <p className="mb-4 leading-relaxed text-gray-700">
                       {children}
                     </p>
                   ),
                   ul: ({ children }) => (
-                    <ul className="mb-4 ml-6 list-disc space-y-2 text-primary-700">
+                    <ul className="mb-4 ml-6 list-disc space-y-2 text-gray-700">
                       {children}
                     </ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="mb-4 ml-6 list-decimal space-y-2 text-primary-700">
+                    <ol className="mb-4 ml-6 list-decimal space-y-2 text-gray-700">
                       {children}
                     </ol>
                   ),
@@ -282,18 +277,18 @@ export default function NewsDetailPage() {
                     </a>
                   ),
                   blockquote: ({ children }) => (
-                    <blockquote className="my-4 border-l-4 border-blue-500 bg-blue-50 p-4 italic text-primary-700">
+                    <blockquote className="my-4 border-l-4 border-blue-500 bg-blue-50 p-4 italic text-gray-700">
                       {children}
                     </blockquote>
                   ),
                   code: ({ className, children }) => {
                     const isInline = !className;
                     return isInline ? (
-                      <code className="rounded bg-primary-100 px-2 py-1 font-mono text-sm text-primary-800">
+                      <code className="bg-gray-100 px-2 py-1 font-mono text-sm text-gray-800">
                         {children}
                       </code>
                     ) : (
-                      <code className="block overflow-x-auto rounded-lg bg-primary-900 p-4 font-mono text-sm text-white">
+                      <code className="block overflow-x-auto bg-gray-900 p-4 font-mono text-sm text-white">
                         {children}
                       </code>
                     );
@@ -311,7 +306,7 @@ export default function NewsDetailPage() {
           <div className="mt-12 text-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-3 rounded-full border-2 border-primary-800 bg-white px-8 py-4 text-lg font-semibold text-primary-800 transition-all duration-300 hover:bg-primary-800 hover:text-white"
+              className="inline-flex items-center justify-center gap-3 border-2 border-gray-900 bg-white px-8 py-4 text-lg font-semibold text-gray-900 transition-all duration-300 hover:bg-gray-900 hover:text-white"
             >
               <svg
                 className="h-5 w-5"
@@ -333,8 +328,8 @@ export default function NewsDetailPage() {
       </article>
 
       {/* Footer */}
-      <footer className="mt-20 border-t border-primary-200 bg-white px-4 py-12 text-center">
-        <p className="text-sm text-primary-500">
+      <footer className="mt-20 border-t border-gray-200 bg-white px-4 py-12 text-center">
+        <p className="text-sm text-gray-500">
           © 2024 戸山高校剣道部OB会. All rights reserved.
         </p>
       </footer>

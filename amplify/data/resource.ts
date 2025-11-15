@@ -63,6 +63,7 @@ const schema = a.schema({
       title: a.string().required(),
       bodyMd: a.string().required(),
       imagePaths: a.string().array(),
+      videoPaths: a.string().array(), // 動画パスの配列
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
@@ -79,6 +80,7 @@ const schema = a.schema({
       bodyMd: a.string().required(),
       sections: a.string().array(),
       imagePaths: a.string().array(),
+      videoPaths: a.string().array(), // 動画パスの配列
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
@@ -98,6 +100,7 @@ const schema = a.schema({
       isPublished: a.boolean().default(false),
       isPinned: a.boolean().default(false),
       imagePaths: a.string().array(), // 画像パスの配列
+      videoPaths: a.string().array(), // 動画パスの配列
     })
     .authorization((allow) => [
       allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能

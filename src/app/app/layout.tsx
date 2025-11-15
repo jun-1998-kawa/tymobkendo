@@ -61,7 +61,7 @@ const components = {
             padding="0.75rem"
             marginTop="1rem"
             borderRadius="0.25rem"
-            borderLeft="4px solid var(--amplify-colors-blue-60)"
+            style={{ borderLeft: "4px solid var(--amplify-colors-blue-60)" }}
           >
             <Text fontSize="0.875rem" fontWeight="600" color="var(--amplify-colors-blue-80)">
               パスワード要件

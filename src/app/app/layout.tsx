@@ -38,7 +38,7 @@ const formFields = {
       label: "パスワード",
       placeholder: "パスワードを入力",
       isRequired: true,
-      helpText: "8文字以上、大文字・小文字・数字・記号を含める必要があります",
+      helpText: "必須: 8文字以上、大文字（A-Z）・小文字（a-z）・数字（0-9）・記号（!@#$%など）を含む",
     },
     confirm_password: {
       order: 6,
@@ -56,6 +56,24 @@ const components = {
       return (
         <View textAlign="center" padding="1rem">
           <Heading level={3}>新規登録</Heading>
+          <View
+            backgroundColor="var(--amplify-colors-blue-10)"
+            padding="0.75rem"
+            marginTop="1rem"
+            borderRadius="0.25rem"
+            borderLeft="4px solid var(--amplify-colors-blue-60)"
+          >
+            <Text fontSize="0.875rem" fontWeight="600" color="var(--amplify-colors-blue-80)">
+              パスワード要件
+            </Text>
+            <Text fontSize="0.75rem" color="var(--amplify-colors-blue-80)" marginTop="0.25rem">
+              • 8文字以上<br />
+              • 大文字を含む（A-Z）<br />
+              • 小文字を含む（a-z）<br />
+              • 数字を含む（0-9）<br />
+              • 記号を含む（!@#$%^&*など）
+            </Text>
+          </View>
         </View>
       );
     },

@@ -46,9 +46,19 @@
 
 /* Authenticator カスタムスタイル */
 @layer components {
-  /* ログイン/サインアップボタンを見やすく */
+  /* ログイン/サインアップボタンを見やすく - 背景色と文字色を明確に */
   [data-amplify-authenticator] button[type="submit"] {
-    @apply min-h-[48px] text-base font-semibold;
+    @apply min-h-[48px] bg-blue-600 text-base font-semibold text-white;
+  }
+
+  /* ボタンのホバー効果 */
+  [data-amplify-authenticator] button[type="submit"]:hover {
+    @apply bg-blue-700 shadow-lg;
+  }
+
+  /* ボタンのフォーカス効果 */
+  [data-amplify-authenticator] button[type="submit"]:focus {
+    @apply bg-blue-700 ring-2 ring-blue-500 ring-offset-2;
   }
 
   /* タブを見やすく */
@@ -61,19 +71,14 @@
     @apply mt-1 text-sm text-gray-600;
   }
 
-  /* パスワードフィールドの下のヘルプテキスト */
+  /* パスワードフィールドの下のヘルプテキストを強調 */
   [data-amplify-authenticator] input[type="password"] + .amplify-field__description {
-    @apply mt-2 rounded bg-blue-50 p-2 text-sm text-blue-700;
+    @apply mt-2 border-l-4 border-blue-500 bg-blue-50 p-3 text-sm font-medium text-blue-800;
   }
 
   /* エラーメッセージ */
   [data-amplify-authenticator] .amplify-field__error-message {
     @apply mt-1 text-sm font-medium text-red-600;
-  }
-
-  /* ボタンのホバー効果 */
-  [data-amplify-authenticator] button[type="submit"]:hover {
-    @apply shadow-lg;
   }
 
   /* タブボタン */
@@ -84,5 +89,13 @@
   /* アクティブなタブ */
   [data-amplify-authenticator] [role="tab"][aria-selected="true"] {
     @apply border-b-2 border-blue-600 text-blue-600;
+  }
+
+  /* 入力フィールド */
+  [data-amplify-authenticator] input[type="text"],
+  [data-amplify-authenticator] input[type="email"],
+  [data-amplify-authenticator] input[type="password"],
+  [data-amplify-authenticator] input[type="number"] {
+    @apply border-gray-300 focus:border-blue-500 focus:ring-blue-500;
   }
 }

@@ -200,10 +200,12 @@ export default function Home() {
       <HeroSlideshow slides={slides} autoPlayInterval={slideInterval} />
 
       {/* News Section */}
-      <NewsSection />
+      <div id="news">
+        <NewsSection />
+      </div>
 
-      {/* Welcome Section with Simple Login */}
-      <section className="bg-white px-4 py-24">
+      {/* Welcome Section with Login Button */}
+      <section id="login" className="bg-white px-4 py-24">
         <div className="mx-auto max-w-4xl text-center">
           <FadeIn>
             <h2 className="mb-6 text-3xl font-bold text-gray-900 md:text-4xl">

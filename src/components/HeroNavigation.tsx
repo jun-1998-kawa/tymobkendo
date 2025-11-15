@@ -23,25 +23,6 @@ export default function HeroNavigation() {
     <nav className="absolute top-0 left-0 right-0 z-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="group flex items-center gap-3">
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6 }}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent-600 to-gold-600 text-2xl font-bold text-white shadow-xl"
-            >
-              剣
-            </motion.div>
-            <div className="hidden md:block">
-              <div className="font-serif text-xl font-bold text-white" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                戸山高校剣道部
-              </div>
-              <div className="text-sm text-white/90" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}>
-                OB会
-              </div>
-            </div>
-          </Link>
-
           {/* Desktop Navigation */}
           <div className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (

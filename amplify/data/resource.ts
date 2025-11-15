@@ -66,7 +66,7 @@ const schema = a.schema({
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
-      allow.guest().to(["read"]), // 公開分
+      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
       allow.groups(["MEMBERS"]).to(["read", "create", "update"]),
       allow.groups(["ADMINS"]), // 全権限（create, read, update, delete）
     ]),
@@ -82,7 +82,7 @@ const schema = a.schema({
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
-      allow.guest().to(["read"]), // 公開ページ
+      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
       allow.groups(["MEMBERS"]).to(["read"]), // 会員限定はisPublic=falseでUI側制御
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -100,7 +100,7 @@ const schema = a.schema({
       imagePaths: a.string().array(), // 画像パスの配列
     })
     .authorization((allow) => [
-      allow.guest().to(["read"]), // 公開ページで誰でも閲覧可能
+      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -117,7 +117,7 @@ const schema = a.schema({
       kenBurnsEffect: a.boolean().default(false), // Ken Burnsエフェクト有効化
     })
     .authorization((allow) => [
-      allow.guest().to(["read"]), // 公開ページで誰でも閲覧可能
+      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -152,7 +152,7 @@ const schema = a.schema({
       isActive: a.boolean().default(true), // アクティブな設定（1レコードのみ想定）
     })
     .authorization((allow) => [
-      allow.guest().to(["read"]), // トップページは誰でも閲覧可能
+      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),

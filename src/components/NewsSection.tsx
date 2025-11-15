@@ -14,55 +14,63 @@ export default function NewsSection() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      // Configure Amplify
-      Amplify.configure(outputs, { ssr: true });
+    const fetchNews = async () => {
+      try {
+        // Configure Amplify
+        Amplify.configure(outputs, { ssr: true });
 
-      // ゲストアクセス用のクライアント（APIキーモード）
-      const client = generateClient({
-        authMode: 'apiKey'
-      });
-      const models = client.models as any;
+        // 少し待機してからクライアントを生成（Amplifyの設定が完全に完了するまで）
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Check if News model exists
-      if (!models.News) {
-        console.warn("News model not found. Please run 'npx ampx sandbox' to update the schema.");
+        // ゲストアクセス用のクライアント（APIキーモード）
+        const client = generateClient({
+          authMode: 'apiKey'
+        });
+        const models = client.models as any;
+
+        // Check if News model exists
+        if (!models.News) {
+          console.warn("News model not found. Please run 'npx ampx sandbox' to update the schema.");
+          setLoading(false);
+          setError("News model not available");
+          return;
+        }
+
+        const sub = models.News.observeQuery({
+          filter: { isPublished: { eq: true } },
+        }).subscribe({
+          next: ({ items }: any) => {
+            const sorted = [...items]
+              .sort((a, b) => {
+                // ピン留めを優先
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                // 公開日時で降順
+                const dateA = new Date(a.publishedAt || a.createdAt).getTime();
+                const dateB = new Date(b.publishedAt || b.createdAt).getTime();
+                return dateB - dateA;
+              })
+              .slice(0, 5); // 最新5件
+            setNewsList(sorted);
+            setLoading(false);
+          },
+          error: (err: any) => {
+            console.error("Error fetching news:", err);
+            const errorMessage = err?.message || err?.toString() || "ニュースの取得に失敗しました";
+            setError(errorMessage);
+            setLoading(false);
+          },
+        });
+
+        return () => sub.unsubscribe();
+      } catch (err) {
+        console.error("Error initializing NewsSection:", err);
+        setError(err instanceof Error ? err.message : "Unknown error");
         setLoading(false);
-        setError("News model not available");
-        return;
       }
+    };
 
-      const sub = models.News.observeQuery({
-        filter: { isPublished: { eq: true } },
-      }).subscribe({
-        next: ({ items }: any) => {
-          const sorted = [...items]
-            .sort((a, b) => {
-              // ピン留めを優先
-              if (a.isPinned && !b.isPinned) return -1;
-              if (!a.isPinned && b.isPinned) return 1;
-              // 公開日時で降順
-              const dateA = new Date(a.publishedAt || a.createdAt).getTime();
-              const dateB = new Date(b.publishedAt || b.createdAt).getTime();
-              return dateB - dateA;
-            })
-            .slice(0, 5); // 最新5件
-          setNewsList(sorted);
-          setLoading(false);
-        },
-        error: (err: any) => {
-          console.error("Error fetching news:", err);
-          const errorMessage = err?.message || err?.toString() || "ニュースの取得に失敗しました";
-          setError(errorMessage);
-          setLoading(false);
-        },
-      });
-      return () => sub.unsubscribe();
-    } catch (err) {
-      console.error("Error initializing NewsSection:", err);
-      setError(err instanceof Error ? err.message : "Unknown error");
-      setLoading(false);
-    }
+    fetchNews();
   }, []);
 
   if (loading) {

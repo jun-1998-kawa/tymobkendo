@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { Amplify } from "aws-amplify";
 import { generateClient } from "aws-amplify/data";
 import { getUrl } from "aws-amplify/storage";
 import HeroSlideshow from "@/components/ui/HeroSlideshow";
@@ -10,12 +11,7 @@ import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 import ShinaiSlash from "@/components/ShinaiSlash";
-
-// ゲストアクセス用のクライアント（APIキーモード）
-const client = generateClient({
-  authMode: 'apiKey'
-});
-const models = client.models as any;
+import outputs from "../../amplify_outputs.json";
 
 type SiteConfig = any;
 type Feature = {
@@ -73,10 +69,21 @@ export default function Home() {
   const [features, setFeatures] = useState<Feature[]>(defaultFeatures);
   const [showContent, setShowContent] = useState(false);
   const [splashComplete, setSplashComplete] = useState(false);
+  const [amplifyReady, setAmplifyReady] = useState(false);
 
   useEffect(() => {
     const loadSiteConfig = async () => {
       try {
+        // Amplifyの設定を確実に行う
+        Amplify.configure(outputs, { ssr: true });
+        setAmplifyReady(true);
+
+        // クライアントを生成（設定後に）
+        const client = generateClient({
+          authMode: 'apiKey'
+        });
+        const models = client.models as any;
+
         const { data: configs } = await models.SiteConfig.list({
           filter: { isActive: { eq: true } },
           limit: 1,
@@ -186,15 +193,15 @@ export default function Home() {
     loadSiteConfig();
   }, []);
 
-  // ローディングとスプラッシュの両方が完了したらコンテンツを表示
+  // Amplify設定、ローディング、スプラッシュの全てが完了したらコンテンツを表示
   useEffect(() => {
-    if (!loading && splashComplete) {
+    if (amplifyReady && !loading && splashComplete) {
       setShowContent(true);
     }
-  }, [loading, splashComplete]);
+  }, [amplifyReady, loading, splashComplete]);
 
-  // ローディング中はShinaiSlashのみ表示
-  if (loading || !splashComplete) {
+  // Amplify設定完了、ローディング、スプラッシュのいずれかが未完了の場合はShinaiSlashを表示
+  if (!amplifyReady || loading || !splashComplete) {
     return (
       <ShinaiSlash onComplete={() => setSplashComplete(true)} />
     );

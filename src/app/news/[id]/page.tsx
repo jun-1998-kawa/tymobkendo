@@ -28,6 +28,10 @@ export default function NewsDetailPage() {
       try {
         // Configure Amplify
         Amplify.configure(outputs, { ssr: true });
+
+        // 少し待機してからクライアントを生成（Amplifyの設定が完全に完了するまで）
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         // ゲストアクセス用のクライアント（APIキーモード）
         const client = generateClient({
           authMode: 'apiKey'

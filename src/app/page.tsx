@@ -111,7 +111,13 @@ export default function Home() {
                 const slidesWithUrls = await Promise.all(
                   sortedSlides.map(async (slide: any) => {
                     try {
-                      const url = await getUrl({ path: `public/${slide.mediaPath}` });
+                      const url = await getUrl({
+                        path: `public/${slide.mediaPath}`,
+                        options: {
+                          validateObjectExistence: false, // ゲストアクセスでも動作
+                          expiresIn: 3600 // 1時間
+                        }
+                      });
                       return {
                         mediaPath: url.url.toString(),
                         mediaType: slide.mediaType,
@@ -138,7 +144,13 @@ export default function Home() {
             if (config.heroImagePaths && config.heroImagePaths.length > 0) {
               try {
                 const urlPromises = config.heroImagePaths.map(async (path: string) => {
-                  const url = await getUrl({ path: `public/${path}` });
+                  const url = await getUrl({
+                    path: `public/${path}`,
+                    options: {
+                      validateObjectExistence: false,
+                      expiresIn: 3600
+                    }
+                  });
                   return url.url.toString();
                 });
                 const urls = await Promise.all(urlPromises);
@@ -152,6 +164,10 @@ export default function Home() {
               try {
                 const url = await getUrl({
                   path: `public/${config.heroImagePath}`,
+                  options: {
+                    validateObjectExistence: false,
+                    expiresIn: 3600
+                  }
                 });
                 setHeroImageUrls([url.url.toString()]);
               } catch (e) {

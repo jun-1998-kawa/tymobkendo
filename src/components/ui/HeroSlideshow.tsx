@@ -50,7 +50,7 @@ export default function HeroSlideshow({
 
   return (
     <div
-      className="relative overflow-hidden bg-primary-900"
+      className={`relative overflow-hidden ${slides.length === 0 || !slides[0]?.mediaPath && !slides[0]?.image ? 'bg-gray-900' : 'bg-black'}`}
       style={{ height, minHeight: "500px" }}
     >
       {/* Navigation - Always on top */}

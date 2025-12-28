@@ -160,16 +160,6 @@ const schema = a.schema({
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
-  // 招待コード設定（管理者のみアクセス可能）
-  InviteCode: a
-    .model({
-      code: a.string().required(), // 招待コード
-      isActive: a.boolean().default(true), // 有効/無効
-      description: a.string(), // 説明（例：「2024年度OB用」）
-    })
-    .authorization((allow) => [
-      allow.groups(["ADMINS"]), // 管理者のみ全権限
-    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;

@@ -112,7 +112,6 @@ function AdminHeader({ signOut, userEmail }: { signOut?: () => void; userEmail?:
 
   const navItems = [
     { href: "/admin", label: "ダッシュボード", icon: "🏠" },
-    { href: "/admin/invite-codes", label: "招待コード", icon: "🎟️" },
     { href: "/admin/hero-slides", label: "スライド管理", icon: "🖼️" },
     { href: "/admin/site-config", label: "サイト設定", icon: "⚙️" },
     { href: "/admin/news", label: "ニュース管理", icon: "📰" },

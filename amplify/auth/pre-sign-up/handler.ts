@@ -1,9 +1,4 @@
 import type { PreSignUpTriggerHandler } from "aws-lambda";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, ScanCommand } from "@aws-sdk/lib-dynamodb";
-
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler: PreSignUpTriggerHandler = async (event) => {
   // サインアップ時に送信された招待コードを取得
@@ -16,25 +11,14 @@ export const handler: PreSignUpTriggerHandler = async (event) => {
     throw new Error("招待コードが入力されていません。招待コードを入力してください。");
   }
 
-  // DynamoDBからアクティブな招待コードを取得
-  const tableName = process.env.INVITE_CODE_TABLE_NAME;
+  // 環境変数から有効な招待コードを取得（カンマ区切り）
+  const validCodesEnv = process.env.INVITE_CODES || "";
+  const validCodes = validCodesEnv.split(",").map((code) => code.trim()).filter(Boolean);
 
-  if (!tableName) {
-    console.error("INVITE_CODE_TABLE_NAME is not set");
+  if (validCodes.length === 0) {
+    console.error("INVITE_CODES environment variable is not set or empty");
     throw new Error("システムエラーが発生しました。管理者にお問い合わせください。");
   }
-
-  const result = await docClient.send(
-    new ScanCommand({
-      TableName: tableName,
-      FilterExpression: "isActive = :active",
-      ExpressionAttributeValues: {
-        ":active": true,
-      },
-    })
-  );
-
-  const validCodes = result.Items?.map((item: { code?: string }) => item.code) || [];
 
   if (!validCodes.includes(submittedCode)) {
     throw new Error("招待コードが無効です。正しい招待コードを入力してください。");

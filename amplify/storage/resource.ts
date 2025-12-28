@@ -12,8 +12,10 @@ export const storage = defineStorage({
     ],
 
     // 会員の投稿画像（認証済みユーザー全員が読み書き可能）
-    "members/{entity_id}/*": [
-      allow.authenticated.to(["read", "write", "delete"]), // 認証済みユーザー全員がアップロード・閲覧・削除可能
+    "members/*": [
+      allow.authenticated.to(["read", "write", "delete"]),
+      allow.groups(["ADMINS"]).to(["read", "write", "delete"]),
+      allow.groups(["MEMBERS"]).to(["read", "write", "delete"]),
     ],
 
     // 掲示板/Tweetの共通参照用（必要に応じて使用）

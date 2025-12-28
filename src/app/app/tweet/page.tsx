@@ -93,9 +93,9 @@ export default function TweetPage() {
         const randomStr = Math.random().toString(36).substring(7);
         const fileName = `tweet-${timestamp}-${randomStr}-${file.name}`;
 
-        // members/{entity_id}/ パスを使用（2階層まで）
+        // テスト: public/members/ パスを使用
         await uploadData({
-          path: `members/${currentUserId}/${fileName}`,
+          path: `public/members/${currentUserId}/${fileName}`,
           data: file,
           options: {
             contentType: file.type,

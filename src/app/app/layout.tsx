@@ -1,51 +1,83 @@
 "use client";
-import { Authenticator, useAuthenticator, View, Text, Heading } from "@aws-amplify/ui-react";
+import { Authenticator, useAuthenticator, View, Text, Heading, TextField } from "@aws-amplify/ui-react";
+import { signUp, SignUpInput } from "aws-amplify/auth";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 
 // Authenticator form fields configuration
 const formFields = {
   signUp: {
-    family_name: {
+    "custom:inviteCode": {
       order: 1,
+      placeholder: "招待コードを入力",
+      label: "招待コード",
+      isRequired: true,
+    },
+    family_name: {
+      order: 2,
       placeholder: "山田",
       label: "姓",
       isRequired: true,
     },
     given_name: {
-      order: 2,
+      order: 3,
       placeholder: "太郎",
       label: "名",
       isRequired: true,
     },
     "custom:graduationYear": {
-      order: 3,
+      order: 4,
       placeholder: "2020",
       label: "卒業年度",
       isRequired: false,
       type: "number",
     },
     email: {
-      order: 4,
+      order: 5,
       placeholder: "example@example.com",
       label: "メールアドレス",
       isRequired: true,
     },
     password: {
-      order: 5,
+      order: 6,
       label: "パスワード",
       placeholder: "パスワードを入力",
       isRequired: true,
       helpText: "必須: 8文字以上、大文字（A-Z）・小文字（a-z）・数字（0-9）・記号（!@#$%など）を含む",
     },
     confirm_password: {
-      order: 6,
+      order: 7,
       label: "パスワード（確認）",
       placeholder: "パスワードを再入力",
       isRequired: true,
     },
+  },
+};
+
+// カスタムサービス：招待コードをclientMetadataとして送信
+const services = {
+  async handleSignUp(input: SignUpInput) {
+    // フォームから招待コードを取得（カスタム属性として送信される）
+    const inviteCode = input.options?.userAttributes?.["custom:inviteCode"] || "";
+
+    // 招待コードをclientMetadataとして送信
+    return signUp({
+      username: input.username,
+      password: input.password,
+      options: {
+        userAttributes: {
+          email: input.options?.userAttributes?.email,
+          given_name: input.options?.userAttributes?.given_name,
+          family_name: input.options?.userAttributes?.family_name,
+          "custom:graduationYear": input.options?.userAttributes?.["custom:graduationYear"] || "",
+        },
+        clientMetadata: {
+          inviteCode: inviteCode,
+        },
+      },
+    });
   },
 };
 
@@ -55,11 +87,26 @@ const components = {
     Header() {
       return (
         <View textAlign="center" padding="1rem">
-          <Heading level={3}>新規登録</Heading>
+          <Heading level={3}>新規登録（招待制）</Heading>
+          <View
+            backgroundColor="var(--amplify-colors-orange-10)"
+            padding="0.75rem"
+            marginTop="1rem"
+            borderRadius="0.25rem"
+            style={{ borderLeft: "4px solid var(--amplify-colors-orange-60)" }}
+          >
+            <Text fontSize="0.875rem" fontWeight="600" color="var(--amplify-colors-orange-80)">
+              招待制について
+            </Text>
+            <Text fontSize="0.75rem" color="var(--amplify-colors-orange-80)" marginTop="0.25rem">
+              新規登録には招待コードが必要です。<br />
+              招待コードは管理者またはOB会員から取得してください。
+            </Text>
+          </View>
           <View
             backgroundColor="var(--amplify-colors-blue-10)"
             padding="0.75rem"
-            marginTop="1rem"
+            marginTop="0.5rem"
             borderRadius="0.25rem"
             style={{ borderLeft: "4px solid var(--amplify-colors-blue-60)" }}
           >
@@ -140,8 +187,9 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
   return (
     <Authenticator
       formFields={formFields}
-      signUpAttributes={["given_name", "family_name", "custom:graduationYear"] as any}
+      signUpAttributes={["given_name", "family_name", "custom:graduationYear", "custom:inviteCode"] as any}
       components={components}
+      services={services}
       // @ts-ignore
       variation="default"
       hideSignUp={false}

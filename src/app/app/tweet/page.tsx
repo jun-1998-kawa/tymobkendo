@@ -110,8 +110,10 @@ export default function TweetPage() {
   return (
     <div className="mx-auto max-w-2xl">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-gray-200 bg-white/80 backdrop-blur-sm px-4 py-3">
-        <h1 className="text-xl font-bold text-gray-900">ホーム</h1>
+      <div className="sticky top-14 z-10 border-b border-gray-100 bg-white/90 backdrop-blur-lg px-4 py-3 md:top-0">
+        <h1 className="text-xl font-bold text-gray-900">
+          <span className="underline-gold">近況投稿</span>
+        </h1>
       </div>
 
       {/* Post Form */}

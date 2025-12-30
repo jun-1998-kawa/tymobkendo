@@ -96,8 +96,8 @@ export default function NewsSection() {
       <div className="mx-auto max-w-7xl">
         <FadeIn>
           <div className="mb-12 text-center">
-            <h2 className="mb-2 text-4xl font-bold text-gray-900">
-              お知らせ
+            <h2 className="mb-3 font-serif text-4xl font-bold">
+              <span className="text-gradient">お知らせ</span>
             </h2>
             <p className="text-base text-gray-600">
               最新のニュース・イベント・活動報告
@@ -117,13 +117,13 @@ export default function NewsSection() {
   );
 }
 
-// News Card Component with Atlassian-inspired Design
+// News Card Component with Kendo-inspired Design
 function NewsCard({ news }: { news: News }) {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
-      お知らせ: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-      イベント: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-      活動報告: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+      お知らせ: { bg: "bg-accent-50", text: "text-accent-700", border: "border-accent-200" },
+      イベント: { bg: "bg-gold-50", text: "text-gold-700", border: "border-gold-300" },
+      活動報告: { bg: "bg-primary-50", text: "text-primary-700", border: "border-primary-200" },
     };
     return colors[category] || colors["お知らせ"];
   };
@@ -134,59 +134,64 @@ function NewsCard({ news }: { news: News }) {
   return (
     <Link href={`/news/${news.id}`}>
       <motion.div
-        whileHover={{ x: 4 }}
-        transition={{ duration: 0.15 }}
-        className="group border-l-4 border-blue-600 bg-white p-6 transition-all hover:bg-gray-50 cursor-pointer"
+        whileHover={{ x: 4, y: -2 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="group relative overflow-hidden rounded-lg border border-gray-100 bg-white p-6 shadow-sm transition-all hover:shadow-md cursor-pointer"
       >
-        <div className="mb-3 flex flex-wrap items-center gap-3">
-          {/* Category Badge */}
-          <span
-            className={`inline-flex items-center gap-1 border ${categoryStyle.border} ${categoryStyle.bg} px-2 py-1 text-xs font-semibold uppercase tracking-wide ${categoryStyle.text}`}
-          >
-            {news.category}
-          </span>
+        {/* Left accent bar */}
+        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-accent-500 to-gold-500" />
 
-          {/* Pin Badge */}
-          {news.isPinned && (
-            <span className="inline-flex items-center gap-1 border border-amber-600 bg-amber-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
-              重要
+        <div className="pl-4">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+            {/* Category Badge */}
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border ${categoryStyle.border} ${categoryStyle.bg} px-3 py-1 text-xs font-semibold ${categoryStyle.text}`}
+            >
+              {news.category}
             </span>
-          )}
 
-          {/* Date */}
-          <span className="text-xs text-gray-500">
-            {publishDate.toLocaleDateString("ja-JP", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </span>
-        </div>
+            {/* Pin Badge */}
+            {news.isPinned && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-gold-400 bg-gradient-to-r from-gold-50 to-amber-50 px-3 py-1 text-xs font-bold text-gold-700">
+                📌 重要
+              </span>
+            )}
 
-        {/* Title */}
-        <h3 className="mb-2 text-2xl font-bold text-gray-900 transition-colors group-hover:text-blue-600">
-          {news.title}
-        </h3>
+            {/* Date */}
+            <span className="text-xs text-gray-500">
+              {publishDate.toLocaleDateString("ja-JP", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </span>
+          </div>
 
-        {/* Excerpt */}
-        <p className="mb-3 text-gray-600">{news.excerpt}</p>
+          {/* Title */}
+          <h3 className="mb-2 text-xl font-bold text-gray-900 transition-colors group-hover:text-accent-600 md:text-2xl">
+            {news.title}
+          </h3>
 
-        {/* Read More Link */}
-        <div className="flex items-center gap-2 text-sm font-semibold text-blue-600">
-          <span>続きを読む</span>
-          <svg
-            className="h-4 w-4 transition-transform group-hover:translate-x-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 7l5 5m0 0l-5 5m5-5H6"
-            />
-          </svg>
+          {/* Excerpt */}
+          <p className="mb-4 text-gray-600 line-clamp-2">{news.excerpt}</p>
+
+          {/* Read More Link */}
+          <div className="flex items-center gap-2 text-sm font-semibold text-accent-600">
+            <span>続きを読む</span>
+            <svg
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </div>
         </div>
       </motion.div>
     </Link>

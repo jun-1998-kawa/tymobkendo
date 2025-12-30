@@ -92,7 +92,7 @@ export function TweetForm({
       <div className="flex gap-3 p-4">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-400 text-white font-semibold text-lg">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-gold-500 text-white font-bold text-lg shadow-sm">
             {currentUserName[0]?.toUpperCase() || "自"}
           </div>
         </div>
@@ -101,13 +101,13 @@ export function TweetForm({
         <div className="flex-1 min-w-0">
           {/* Reply To Indicator */}
           {replyTo && (
-            <div className="mb-2 text-sm text-gray-500 bg-gray-50 p-2 flex items-center justify-between border border-gray-200">
+            <div className="mb-2 text-sm text-gray-600 bg-accent-50 p-2 flex items-center justify-between border-l-2 border-accent-400 rounded-r">
               <span>
-                <span className="text-blue-600">@{replyTo.author}</span> へのリプライ
+                <span className="font-medium text-accent-700">@{replyTo.author}</span> へのリプライ
               </span>
               <button
                 onClick={onCancelReply}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-accent-600 transition-colors"
               >
                 ×
               </button>
@@ -181,7 +181,7 @@ export function TweetForm({
             <div className="flex items-center gap-1">
               {/* Image Upload Button */}
               <label
-                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full hover:bg-blue-50 transition ${
+                className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-full hover:bg-accent-50 transition-colors ${
                   uploading || imagePaths.length >= 4
                     ? "opacity-50 cursor-not-allowed"
                     : ""
@@ -196,7 +196,7 @@ export function TweetForm({
                   className="hidden"
                 />
                 <svg
-                  className="h-5 w-5 text-blue-500"
+                  className="h-5 w-5 text-accent-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -211,7 +211,7 @@ export function TweetForm({
               </label>
 
               {uploading && (
-                <span className="text-sm text-gray-500">アップロード中...</span>
+                <span className="text-sm text-accent-600">アップロード中...</span>
               )}
             </div>
 
@@ -235,10 +235,10 @@ export function TweetForm({
               <button
                 disabled={disabled || loading || uploading}
                 onClick={handlePost}
-                className={`px-5 py-2 font-medium text-sm transition ${
+                className={`rounded-full px-5 py-2 font-semibold text-sm transition-all duration-200 ${
                   disabled || loading || uploading
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-blue-600 text-white hover:bg-blue-700"
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-accent-600 to-accent-500 text-white shadow-sm hover:from-accent-700 hover:to-accent-600 hover:shadow-md"
                 }`}
               >
                 {loading ? "投稿中..." : replyTo ? "返信" : "ポスト"}

@@ -239,9 +239,10 @@ export default function Home() {
             <div className="mt-12">
               <Link
                 href="/app"
-                className="inline-flex items-center justify-center bg-blue-600 px-12 py-4 text-lg font-semibold text-white transition-all hover:bg-blue-700 hover:shadow-lg"
+                className="group relative inline-flex items-center justify-center overflow-hidden bg-gradient-to-r from-accent-700 to-accent-600 px-12 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-accent-800 hover:to-accent-700 hover:shadow-xl"
               >
-                会員ログイン
+                <span className="relative z-10">会員ログイン</span>
+                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-gold-500/20 to-transparent transition-transform duration-500 group-hover:translate-x-full" />
               </Link>
             </div>
           </SlideIn>
@@ -249,8 +250,18 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 px-4 py-8 text-center text-gray-400">
-        <p className="text-sm">{footerCopyright}</p>
+      <footer className="bg-gradient-to-b from-primary-900 to-black px-4 py-12 text-center">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent-600 to-gold-500 text-sm font-bold text-white shadow-lg">
+              剣
+            </span>
+            <span className="font-serif text-lg font-bold text-white">
+              戸山剣道部<span className="text-gold-400">OB会</span>
+            </span>
+          </div>
+          <p className="text-sm text-gray-400">{footerCopyright}</p>
+        </div>
       </footer>
       </motion.main>
     </>

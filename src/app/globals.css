@@ -44,26 +44,26 @@
   }
 }
 
-/* Authenticator カスタムスタイル */
+/* Authenticator カスタムスタイル - 剣道カラー */
 @layer components {
-  /* ログイン/サインアップボタンを見やすく - 背景色と文字色を明確に */
+  /* ログイン/サインアップボタン - 朱色ベース */
   [data-amplify-authenticator] button[type="submit"] {
-    @apply min-h-[48px] bg-blue-600 text-base font-semibold text-white;
+    @apply min-h-[48px] bg-accent-700 text-base font-semibold text-white transition-all duration-300;
   }
 
   /* ボタンのホバー効果 */
   [data-amplify-authenticator] button[type="submit"]:hover {
-    @apply bg-blue-700 shadow-lg;
+    @apply bg-accent-800 shadow-lg;
   }
 
   /* ボタンのフォーカス効果 */
   [data-amplify-authenticator] button[type="submit"]:focus {
-    @apply bg-blue-700 ring-2 ring-blue-500 ring-offset-2;
+    @apply bg-accent-800 ring-2 ring-accent-400 ring-offset-2;
   }
 
   /* タブを見やすく */
   [data-amplify-authenticator] [data-amplify-router] {
-    @apply border-0 shadow-lg;
+    @apply border-0 shadow-xl;
   }
 
   /* フォームフィールドのヘルプテキスト */
@@ -73,22 +73,22 @@
 
   /* パスワードフィールドの下のヘルプテキストを強調 */
   [data-amplify-authenticator] input[type="password"] + .amplify-field__description {
-    @apply mt-2 border-l-4 border-blue-500 bg-blue-50 p-3 text-sm font-medium text-blue-800;
+    @apply mt-2 border-l-4 border-accent-500 bg-accent-50 p-3 text-sm font-medium text-accent-800;
   }
 
   /* エラーメッセージ */
   [data-amplify-authenticator] .amplify-field__error-message {
-    @apply mt-1 text-sm font-medium text-red-600;
+    @apply mt-1 text-sm font-medium text-accent-700;
   }
 
   /* タブボタン */
   [data-amplify-authenticator] [role="tab"] {
-    @apply text-base font-semibold;
+    @apply text-base font-semibold transition-colors duration-200;
   }
 
   /* アクティブなタブ */
   [data-amplify-authenticator] [role="tab"][aria-selected="true"] {
-    @apply border-b-2 border-blue-600 text-blue-600;
+    @apply border-b-2 border-accent-600 text-accent-700;
   }
 
   /* 入力フィールド */
@@ -96,6 +96,36 @@
   [data-amplify-authenticator] input[type="email"],
   [data-amplify-authenticator] input[type="password"],
   [data-amplify-authenticator] input[type="number"] {
-    @apply border-gray-300 focus:border-blue-500 focus:ring-blue-500;
+    @apply border-gray-300 transition-all duration-200 focus:border-accent-500 focus:ring-accent-500;
+  }
+
+  /* モダンカード基本スタイル */
+  .card-modern {
+    @apply relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-sm transition-all duration-300;
+  }
+
+  .card-modern:hover {
+    @apply -translate-y-0.5 border-accent-200 shadow-md;
+  }
+
+  /* 左アクセント付きカード */
+  .card-accent {
+    @apply border-l-4;
+    border-image: linear-gradient(to bottom, #D32F2F, #FFB300) 1;
+  }
+
+  /* グラデーションテキスト */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-800 via-accent-700 to-gold-600 bg-clip-text text-transparent;
+  }
+
+  /* 金のアンダーライン */
+  .underline-gold {
+    @apply relative inline-block;
+  }
+
+  .underline-gold::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-accent-500 to-gold-500 opacity-60;
   }
 }

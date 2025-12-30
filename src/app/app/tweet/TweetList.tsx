@@ -17,9 +17,10 @@ export function TweetList({
 
   if (mainTweets.length === 0) {
     return (
-      <div className="p-12 text-center border-b border-gray-200">
-        <p className="text-gray-500 text-lg">まだ投稿がありません</p>
-        <p className="text-gray-400 text-sm mt-2">最初の投稿をしてみましょう</p>
+      <div className="flex flex-col items-center justify-center p-12 text-center border-b border-gray-100">
+        <div className="mb-4 text-5xl">🥋</div>
+        <p className="text-gray-700 text-lg font-medium">まだ投稿がありません</p>
+        <p className="text-gray-500 text-sm mt-2">最初の一歩を踏み出しましょう</p>
       </div>
     );
   }

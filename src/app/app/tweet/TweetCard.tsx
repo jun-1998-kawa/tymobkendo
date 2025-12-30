@@ -126,7 +126,7 @@ export function TweetCard({
       <div className="flex gap-3 px-4 py-3 hover:bg-gray-50 transition cursor-pointer">
         {/* Avatar */}
         <div className="flex-shrink-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-400 text-white font-semibold">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-700 to-primary-900 text-gold-400 font-bold shadow-sm">
             {(tweet.author || "匿名")[0].toUpperCase()}
           </div>
         </div>
@@ -194,9 +194,9 @@ export function TweetCard({
               }}
               className="flex items-center gap-2 group"
             >
-              <div className="flex items-center justify-center p-2 group-hover:bg-blue-50 transition">
+              <div className="flex items-center justify-center p-2 rounded-full group-hover:bg-gold-50 transition-colors">
                 <svg
-                  className="h-5 w-5 group-hover:text-blue-500"
+                  className="h-5 w-5 group-hover:text-gold-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -210,7 +210,7 @@ export function TweetCard({
                 </svg>
               </div>
               {(tweet.replyCount ?? 0) > 0 && (
-                <span className="text-sm group-hover:text-blue-500">
+                <span className="text-sm group-hover:text-gold-600">
                   {tweet.replyCount}
                 </span>
               )}
@@ -227,12 +227,12 @@ export function TweetCard({
                 favoriteLoading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
-              <div className="flex items-center justify-center p-2 group-hover:bg-pink-50 transition">
+              <div className="flex items-center justify-center p-2 rounded-full group-hover:bg-accent-50 transition-colors">
                 <svg
-                  className={`h-5 w-5 ${
+                  className={`h-5 w-5 transition-colors ${
                     isFavorited
-                      ? "text-pink-500 fill-pink-500"
-                      : "group-hover:text-pink-500"
+                      ? "text-accent-500 fill-accent-500"
+                      : "group-hover:text-accent-500"
                   }`}
                   fill={isFavorited ? "currentColor" : "none"}
                   stroke="currentColor"
@@ -249,7 +249,7 @@ export function TweetCard({
               {(tweet.favoriteCount ?? 0) > 0 && (
                 <span
                   className={`text-sm ${
-                    isFavorited ? "text-pink-500" : "group-hover:text-pink-500"
+                    isFavorited ? "text-accent-500" : "group-hover:text-accent-500"
                   }`}
                 >
                   {tweet.favoriteCount}
@@ -287,10 +287,10 @@ export function TweetCard({
 
       {/* Show Replies Toggle */}
       {replies.length > 0 && !isReply && (
-        <div className="px-4 py-2 border-t border-gray-200">
+        <div className="px-4 py-2 border-t border-gray-100">
           <button
             onClick={() => setShowReplies(!showReplies)}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm text-accent-600 hover:text-accent-700 font-medium transition-colors"
           >
             {showReplies
               ? "リプライを非表示"

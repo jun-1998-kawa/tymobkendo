@@ -153,7 +153,7 @@ function NewsCard({ news }: { news: News }) {
             {/* Pin Badge */}
             {news.isPinned && (
               <span className="inline-flex items-center gap-1 rounded-full border border-gold-400 bg-gradient-to-r from-gold-50 to-amber-50 px-3 py-1 text-xs font-bold text-gold-700">
-                📌 重要
+                重要
               </span>
             )}
 

@@ -1,9 +1,12 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
+import { getUrl } from "aws-amplify/storage";
 import { models } from "@/lib/amplifyClient";
+import type { SiteConfig, HeroSlide } from "@/lib/amplifyClient";
 import FadeIn from "@/components/ui/FadeIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 
@@ -22,11 +25,13 @@ export default function AppDashboard() {
     threadCount: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // ユーザー情報を取得
+        const user = await getCurrentUser();
         const attributes = await fetchUserAttributes();
         const familyName = attributes.family_name || "";
         const givenName = attributes.given_name || "";
@@ -40,11 +45,70 @@ export default function AppDashboard() {
           models.BoardThread.list({ limit: 1000 }),
         ]);
 
+        // 有効なツイート（非表示でないもの）をフィルタリング
+        const visibleTweets = tweetsResult.data?.filter((t) => !t.isHidden) || [];
+        const visibleTweetIds = new Set(visibleTweets.map((t) => t.id));
+
+        // 自分のお気に入りのみカウント（かつ有効なツイートへのもののみ）
+        const myValidFavorites = favoritesResult.data?.filter((fav) => {
+          // 自分のお気に入りかチェック（ownerまたはカスタムID形式で判定）
+          const isMyFavorite = fav.owner === user.userId ||
+            (fav.id && fav.id.includes('#') && fav.id.split('#')[1] === user.userId);
+          // 有効なツイートへのお気に入りかチェック
+          const isValidTweet = visibleTweetIds.has(fav.tweetId);
+          return isMyFavorite && isValidTweet;
+        }) || [];
+
         setStats({
-          tweetCount: tweetsResult.data?.filter((t) => !t.isHidden).length || 0,
-          favoriteCount: favoritesResult.data?.length || 0,
+          tweetCount: visibleTweets.length,
+          favoriteCount: myValidFavorites.length,
           threadCount: threadsResult.data?.length || 0,
         });
+
+        // 背景画像を取得（トップページと同じ画像を使用）
+        try {
+          const siteConfigResult = await models.SiteConfig.list({
+            filter: { isActive: { eq: true } },
+            limit: 1,
+          });
+
+          const config = siteConfigResult.data?.[0] as SiteConfig | undefined;
+
+          if (config?.useHeroSlides) {
+            // HeroSlidesを使用している場合
+            const heroSlidesResult = await models.HeroSlide.list({
+              filter: { isActive: { eq: true } },
+            });
+            const slides = heroSlidesResult.data as HeroSlide[] | null;
+            if (slides && slides.length > 0) {
+              const sortedSlides = [...slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+              const firstSlide = sortedSlides[0];
+              if (firstSlide.mediaPath && firstSlide.mediaType !== 'video') {
+                const url = await getUrl({
+                  path: `public/${firstSlide.mediaPath}`,
+                  options: { validateObjectExistence: false, expiresIn: 3600 }
+                });
+                setBackgroundImage(url.url.toString());
+              }
+            }
+          } else if (config?.heroImagePaths && config.heroImagePaths.length > 0) {
+            // heroImagePathsを使用している場合
+            const url = await getUrl({
+              path: `public/${config.heroImagePaths[0]}`,
+              options: { validateObjectExistence: false, expiresIn: 3600 }
+            });
+            setBackgroundImage(url.url.toString());
+          } else if (config?.heroImagePath) {
+            // 単一のheroImagePathを使用している場合
+            const url = await getUrl({
+              path: `public/${config.heroImagePath}`,
+              options: { validateObjectExistence: false, expiresIn: 3600 }
+            });
+            setBackgroundImage(url.url.toString());
+          }
+        } catch (bgError) {
+          console.error("Error loading background image:", bgError);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -99,7 +163,22 @@ export default function AppDashboard() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-8">
+    <div className="relative mx-auto max-w-6xl space-y-8">
+      {/* Background Image */}
+      {backgroundImage && (
+        <div className="fixed inset-0 -z-10">
+          <Image
+            src={backgroundImage}
+            alt=""
+            fill
+            className="object-cover opacity-10"
+            priority
+            unoptimized
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-50/80 via-gray-50/90 to-gray-50" />
+        </div>
+      )}
+
       {/* Welcome Section */}
       <FadeIn>
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-800 via-primary-900 to-black p-6 text-white shadow-xl md:p-8">

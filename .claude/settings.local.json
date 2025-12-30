@@ -19,7 +19,11 @@
       "Bash(test:*)",
       "WebFetch(domain:nakagawa-in.jp)",
       "Bash(timeout /t 20 /nobreak)",
-      "Bash(timeout /t 60 /nobreak)"
+      "Bash(timeout /t 60 /nobreak)",
+      "Bash(git -C \"C:\\\\tymobsite\" log --oneline -20)",
+      "Bash(git -C \"C:\\\\tymobsite\" branch -a)",
+      "Bash(cat:*)",
+      "WebFetch(domain:docs.amplify.aws)"
     ],
     "deny": [],
     "ask": []

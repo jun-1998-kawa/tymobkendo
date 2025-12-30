@@ -24,7 +24,8 @@
       "Bash(git -C \"C:\\\\tymobsite\" branch -a)",
       "Bash(cat:*)",
       "WebFetch(domain:docs.amplify.aws)",
-      "WebFetch(domain:vercel.com)"
+      "WebFetch(domain:vercel.com)",
+      "Bash(npm run test)"
     ],
     "deny": [],
     "ask": []

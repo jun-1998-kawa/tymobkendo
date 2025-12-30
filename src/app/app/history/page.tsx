@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getUrl } from "aws-amplify/storage";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
@@ -118,6 +119,38 @@ export default function HistoryPage() {
 // History Card Component
 function HistoryCard({ entry, isPrivate }: { entry: HistoryEntry; isPrivate: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [videoUrls, setVideoUrls] = useState<string[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+
+  // 動画URLを取得
+  useEffect(() => {
+    const loadVideos = async () => {
+      if (!entry.videoPaths || entry.videoPaths.length === 0) return;
+
+      setLoadingVideos(true);
+      try {
+        const urls = await Promise.all(
+          entry.videoPaths.map(async (path) => {
+            const result = await getUrl({
+              path: `public/${path}`,
+              options: {
+                validateObjectExistence: false,
+                expiresIn: 3600,
+              },
+            });
+            return result.url.toString();
+          })
+        );
+        setVideoUrls(urls);
+      } catch (error) {
+        console.error("Error loading video URLs:", error);
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
+    loadVideos();
+  }, [entry.videoPaths]);
 
   const cardStyle = isPrivate
     ? {
@@ -222,6 +255,41 @@ function HistoryCard({ entry, isPrivate }: { entry: HistoryEntry; isPrivate: boo
             <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
           )}
         </div>
+
+        {/* Video Section */}
+        {videoUrls.length > 0 && (
+          <div className="mt-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">🎬</span>
+              <h4 className="font-semibold text-primary-800">動画</h4>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {videoUrls.map((url, index) => (
+                <div
+                  key={index}
+                  className="overflow-hidden rounded-xl border border-primary-200 bg-black shadow-md"
+                >
+                  <video
+                    src={url}
+                    controls
+                    preload="metadata"
+                    className="aspect-video w-full"
+                    playsInline
+                  >
+                    お使いのブラウザは動画タグをサポートしていません。
+                  </video>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {loadingVideos && (
+          <div className="mt-6 flex items-center gap-2 text-sm text-primary-600">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent"></div>
+            動画を読み込み中...
+          </div>
+        )}
 
         {/* Expand/Collapse Button */}
         {entry.bodyMd.length > 200 && (

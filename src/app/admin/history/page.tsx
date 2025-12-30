@@ -229,7 +229,9 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
   const [title, setTitle] = useState(entry?.title || "");
   const [bodyMd, setBodyMd] = useState(entry?.bodyMd || "");
   const [imagePaths, setImagePaths] = useState<string[]>(entry?.imagePaths || []);
+  const [videoPaths, setVideoPaths] = useState<string[]>(entry?.videoPaths || []);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,6 +270,48 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
     setImagePaths(imagePaths.filter((_, i) => i !== index));
   };
 
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingVideo(true);
+    const uploadedPaths: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // 動画ファイルサイズチェック（100MB制限）
+        if (file.size > 100 * 1024 * 1024) {
+          alert(`ファイル「${file.name}」は100MBを超えています。100MB以下のファイルを選択してください。`);
+          continue;
+        }
+
+        const timestamp = Date.now();
+        const fileName = `history/videos/${timestamp}-${file.name}`;
+
+        await uploadData({
+          path: `public/${fileName}`,
+          data: file,
+          options: {
+            contentType: file.type,
+          },
+        }).result;
+
+        uploadedPaths.push(fileName);
+      }
+
+      setVideoPaths([...videoPaths, ...uploadedPaths]);
+    } catch (error) {
+      console.error("Error uploading videos:", error);
+      alert("動画のアップロードに失敗しました");
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleRemoveVideo = (index: number) => {
+    setVideoPaths(videoPaths.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -281,6 +325,7 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
           title,
           bodyMd,
           imagePaths: imagePaths.length > 0 ? imagePaths : null,
+          videoPaths: videoPaths.length > 0 ? videoPaths : null,
         });
       } else {
         // Create
@@ -289,6 +334,7 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
           title,
           bodyMd,
           imagePaths: imagePaths.length > 0 ? imagePaths : null,
+          videoPaths: videoPaths.length > 0 ? videoPaths : null,
           isPublic: true,
         });
       }
@@ -405,6 +451,62 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
                       <button
                         type="button"
                         onClick={() => handleRemoveImage(index)}
+                        className="ml-2 flex-shrink-0 rounded-lg bg-red-100 px-2 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
+                      >
+                        削除
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Video Upload Section */}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-primary-800">
+              動画アップロード
+            </label>
+            <div className="rounded-lg border-2 border-dashed border-primary-300 bg-primary-50 p-6 transition-all hover:border-blue-400 hover:bg-blue-50">
+              <input
+                type="file"
+                accept="video/*"
+                multiple
+                onChange={handleVideoUpload}
+                disabled={uploadingVideo}
+                className="w-full cursor-pointer file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:transition-all hover:file:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              <p className="mt-2 text-xs text-primary-500">
+                対応形式: MP4, WebM, MOV など（最大100MB/ファイル）
+              </p>
+              {uploadingVideo && (
+                <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+                  アップロード中...
+                </div>
+              )}
+            </div>
+
+            {videoPaths.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-sm font-semibold text-primary-700">
+                  アップロード済み動画:
+                </p>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {videoPaths.map((path, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between rounded-lg border border-primary-200 bg-white p-3"
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <span className="text-2xl">🎬</span>
+                        <span className="truncate text-sm text-primary-700">
+                          {path.split("/").pop()}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveVideo(index)}
                         className="ml-2 flex-shrink-0 rounded-lg bg-red-100 px-2 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
                       >
                         削除

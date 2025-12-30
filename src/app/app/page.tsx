@@ -49,6 +49,9 @@ export default function AppDashboard() {
         const visibleTweets = tweetsResult.data?.filter((t) => !t.isHidden) || [];
         const visibleTweetIds = new Set(visibleTweets.map((t) => t.id));
 
+        // メインツイート（リプライを除く）のみカウント（表示と一致させる）
+        const mainTweets = visibleTweets.filter((t) => !t.replyToId);
+
         // 自分のお気に入りのみカウント（かつ有効なツイートへのもののみ）
         const myValidFavorites = favoritesResult.data?.filter((fav) => {
           // 自分のお気に入りかチェック（ownerまたはカスタムID形式で判定）
@@ -60,7 +63,7 @@ export default function AppDashboard() {
         }) || [];
 
         setStats({
-          tweetCount: visibleTweets.length,
+          tweetCount: mainTweets.length,
           favoriteCount: myValidFavorites.length,
           threadCount: threadsResult.data?.length || 0,
         });

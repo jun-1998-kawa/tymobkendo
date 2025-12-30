@@ -1,17 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { getUrl } from "aws-amplify/storage";
 import { getCurrentUser } from "aws-amplify/auth";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { models } from "@/lib/amplifyClient";
+import { formatRelativeTime } from "@/utils/dateFormatter";
+import type { Tweet, Favorite } from "@/lib/amplifyClient";
 
-const client = generateClient();
-const models = client.models as any;
-
-type Tweet = any;
-type Favorite = any;
+/** お気に入り付きツイート */
+type FavoritedTweet = Tweet & { favoriteId: string };
 
 export default function FavoritesPage() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -28,9 +27,9 @@ export default function FavoritesPage() {
         // 自分のお気に入りを取得
         // owner フィルターが機能しない場合に備えて、全て取得してからフィルター
         const favSub = models.Favorite.observeQuery({}).subscribe({
-          next: ({ items }: any) => {
+          next: ({ items }: { items: Favorite[] }) => {
             // 複合ID（{tweetId}#{userId}）を使用している場合は、IDから判定
-            const myFavorites = items.filter((fav: any) => {
+            const myFavorites = items.filter((fav) => {
               // owner フィールドがある場合はそれで判定
               if (fav.owner) {
                 return fav.owner === user.userId;
@@ -48,7 +47,7 @@ export default function FavoritesPage() {
 
         // 全てのTweetを取得
         const tweetSub = models.Tweet.observeQuery({}).subscribe({
-          next: ({ items }: any) => {
+          next: ({ items }: { items: Tweet[] }) => {
             setTweets(items);
             setLoading(false);
           },
@@ -73,7 +72,7 @@ export default function FavoritesPage() {
       const tweet = tweets.find((t) => t.id === fav.tweetId);
       return tweet ? { ...tweet, favoriteId: fav.id } : null;
     })
-    .filter((t): t is Tweet => t !== null)
+    .filter((t): t is FavoritedTweet => t !== null)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
@@ -128,9 +127,8 @@ export default function FavoritesPage() {
 
 function FavoriteTweetCard({
   tweet,
-  currentUserId,
 }: {
-  tweet: any;
+  tweet: FavoritedTweet;
   currentUserId: string;
 }) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
@@ -157,24 +155,6 @@ function FavoriteTweetCard({
     fetchImageUrls();
   }, [tweet.imagePaths, tweet.authorId]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "今";
-    if (diffMins < 60) return `${diffMins}分`;
-    if (diffHours < 24) return `${diffHours}時間`;
-    if (diffDays < 7) return `${diffDays}日`;
-
-    return date.toLocaleDateString("ja-JP", {
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const handleRemoveFavorite = async () => {
     if (removing) return;
@@ -233,7 +213,7 @@ function FavoriteTweetCard({
               {tweet.author || "匿名"}
             </span>
             <span className="text-gray-500 text-sm">
-              · {formatDate(tweet.createdAt)}
+              · {formatRelativeTime(tweet.createdAt)}
             </span>
           </div>
 

@@ -232,6 +232,7 @@ export default function NewsDetailPage() {
             <div className="border border-gray-200 bg-white p-8 shadow-lg md:p-12">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
+                allowedElements={['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'blockquote', 'strong', 'em', 'br', 'hr', 'table', 'thead', 'tbody', 'tr', 'th', 'td']}
                 components={{
                   h1: ({ children }) => (
                     <h1 className="mb-4 mt-8 font-serif text-3xl font-bold text-gray-900 first:mt-0">

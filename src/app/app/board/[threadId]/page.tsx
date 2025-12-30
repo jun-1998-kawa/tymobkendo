@@ -1,16 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { uploadData, getUrl } from "aws-amplify/storage";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-
-const client = generateClient();
-const models = client.models as any;
-
-type BoardMessage = any;
-type BoardThread = any;
+import { models } from "@/lib/amplifyClient";
+import { formatDateTime } from "@/utils/dateFormatter";
+import type { BoardThread, BoardMessage } from "@/lib/amplifyClient";
 
 export default function ThreadPage() {
   const params = useParams();
@@ -41,7 +37,7 @@ export default function ThreadPage() {
     fetchCurrentUserId();
 
     // スレッド情報取得
-    models.BoardThread.get({ id: threadId }).then((result: any) => {
+    models.BoardThread.get({ id: threadId }).then((result: { data: BoardThread | null }) => {
       if (result.data) {
         setThread(result.data);
       }
@@ -51,8 +47,8 @@ export default function ThreadPage() {
     const sub = models.BoardMessage.observeQuery({
       filter: { threadId: { eq: threadId } }
     }).subscribe({
-      next: ({ items }: any) => {
-        const visible = items.filter((m: any) => !m.isHidden);
+      next: ({ items }: { items: BoardMessage[] }) => {
+        const visible = items.filter((m) => !m.isHidden);
         const sorted = [...visible].sort(
           (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
@@ -126,8 +122,9 @@ export default function ThreadPage() {
       setImagePaths([]);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (e: any) {
-      setError(e.message || "投稿に失敗しました");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "投稿に失敗しました";
+      setError(message);
       setTimeout(() => setError(""), 5000);
     } finally {
       setLoading(false);
@@ -139,8 +136,9 @@ export default function ThreadPage() {
 
     try {
       await models.BoardMessage.delete({ id });
-    } catch (e: any) {
-      alert(e.message || "削除に失敗しました");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "削除に失敗しました";
+      alert(message);
     }
   };
 
@@ -277,7 +275,7 @@ function MessageRow({
   index,
   onDelete,
 }: {
-  message: any;
+  message: BoardMessage;
   index: number;
   onDelete: (id: string) => void;
 }) {
@@ -305,19 +303,6 @@ function MessageRow({
     fetchImageUrls();
   }, [message.imagePaths, message.authorId]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const weekday = ["日", "月", "火", "水", "木", "金", "土"][date.getDay()];
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-
-    return `${year}/${month}/${day}(${weekday}) ${hours}:${minutes}:${seconds}`;
-  };
-
   // 簡易ID生成（最後8文字）
   const generateId = (createdAt: string) => {
     return createdAt.slice(-8).replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
@@ -334,7 +319,7 @@ function MessageRow({
         </span>
         <span className="text-gray-700">:</span>
         <span className="text-gray-600 text-xs">
-          {formatDate(message.createdAt)}
+          {formatDateTime(message.createdAt)}
         </span>
         <span className="text-gray-600 text-xs">
           ID:{generateId(message.createdAt)}

@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import Link from "next/link";
-
-const client = generateClient();
-const models = client.models as any;
-
-type BoardThread = any;
+import { models } from "@/lib/amplifyClient";
+import { formatLocalDate } from "@/utils/dateFormatter";
+import type { BoardThread } from "@/lib/amplifyClient";
 
 export default function BoardPage() {
   const [threads, setThreads] = useState<BoardThread[]>([]);
@@ -17,7 +14,7 @@ export default function BoardPage() {
 
   useEffect(() => {
     const sub = models.BoardThread.observeQuery({}).subscribe({
-      next: ({ items }: any) => {
+      next: ({ items }: { items: BoardThread[] }) => {
         const sorted = [...items].sort((a, b) => {
           if (a.pinned && !b.pinned) return -1;
           if (!a.pinned && b.pinned) return 1;
@@ -41,8 +38,9 @@ export default function BoardPage() {
       setTitle("");
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (e: any) {
-      setError(e.message || "スレッド作成に失敗しました");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "スレッド作成に失敗しました";
+      setError(message);
       setTimeout(() => setError(""), 5000);
     } finally {
       setLoading(false);
@@ -146,16 +144,7 @@ export default function BoardPage() {
 }
 
 // Thread Row Component
-function ThreadRow({ thread, index, isPinned = false }: { thread: any; index: number; isPinned?: boolean }) {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).replace(/\//g, "/");
-  };
-
+function ThreadRow({ thread, index, isPinned = false }: { thread: BoardThread; index: number; isPinned?: boolean }) {
   return (
     <Link href={`/app/board/${thread.id}`}>
       <div className={`px-4 py-2.5 border-b border-gray-200 hover:bg-gray-50 ${
@@ -170,7 +159,7 @@ function ThreadRow({ thread, index, isPinned = false }: { thread: any; index: nu
             <span className="text-xs text-red-600 font-bold">【固定】</span>
           )}
           <span className="text-xs text-gray-500">
-            ({formatDate(thread.createdAt)})
+            ({formatLocalDate(thread.createdAt)})
           </span>
         </div>
       </div>

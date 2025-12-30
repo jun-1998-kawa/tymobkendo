@@ -23,7 +23,8 @@
       "Bash(git -C \"C:\\\\tymobsite\" log --oneline -20)",
       "Bash(git -C \"C:\\\\tymobsite\" branch -a)",
       "Bash(cat:*)",
-      "WebFetch(domain:docs.amplify.aws)"
+      "WebFetch(domain:docs.amplify.aws)",
+      "WebFetch(domain:vercel.com)"
     ],
     "deny": [],
     "ask": []

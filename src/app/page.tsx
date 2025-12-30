@@ -10,9 +10,18 @@ import NewsSection from "@/components/NewsSection";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import ShinaiSlash from "@/components/ShinaiSlash";
+import type { SiteConfig, HeroSlide } from "@/lib/amplifyClient";
 import outputs from "../../amplify_outputs.json";
 
-type SiteConfig = any;
+/** スライドショー用のデータ型（HeroSlideshowのSlide型と互換） */
+interface SlideData {
+  image?: string;
+  mediaPath?: string;
+  mediaType?: "image" | "video";
+  title?: string;
+  subtitle?: string;
+  kenBurnsEffect?: boolean;
+}
 
 // デフォルトのコンテンツ（フォールバック用）
 const defaultHeroSlides = [
@@ -35,7 +44,7 @@ const defaultFooter = {
 export default function Home() {
   const [siteConfig, setSiteConfig] = useState<SiteConfig | null>(null);
   const [heroImageUrls, setHeroImageUrls] = useState<string[]>([]);
-  const [heroSlides, setHeroSlides] = useState<any[]>([]);
+  const [heroSlides, setHeroSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showContent, setShowContent] = useState(false);
   const [splashComplete, setSplashComplete] = useState(false);
@@ -52,7 +61,10 @@ export default function Home() {
         const client = generateClient({
           authMode: 'apiKey'
         });
-        const models = client.models as any;
+        const models = client.models as {
+          SiteConfig: { list: (options?: unknown) => Promise<{ data: SiteConfig[] | null }> };
+          HeroSlide: { list: (options?: unknown) => Promise<{ data: HeroSlide[] | null }> };
+        };
 
         const { data: configs } = await models.SiteConfig.list({
           filter: { isActive: { eq: true } },
@@ -72,11 +84,11 @@ export default function Home() {
 
               if (slides && slides.length > 0) {
                 // order でソート
-                const sortedSlides = [...slides].sort((a: any, b: any) => a.order - b.order);
+                const sortedSlides = [...slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
                 // メディアURLを取得
                 const slidesWithUrls = await Promise.all(
-                  sortedSlides.map(async (slide: any) => {
+                  sortedSlides.map(async (slide) => {
                     try {
                       const url = await getUrl({
                         path: `public/${slide.mediaPath}`,
@@ -87,10 +99,10 @@ export default function Home() {
                       });
                       return {
                         mediaPath: url.url.toString(),
-                        mediaType: slide.mediaType,
-                        title: slide.title,
-                        subtitle: slide.subtitle,
-                        kenBurnsEffect: slide.kenBurnsEffect,
+                        mediaType: slide.mediaType ?? undefined,
+                        title: slide.title ?? undefined,
+                        subtitle: slide.subtitle ?? undefined,
+                        kenBurnsEffect: slide.kenBurnsEffect ?? undefined,
                       };
                     } catch (e) {
                       console.error("Failed to load slide media:", e);

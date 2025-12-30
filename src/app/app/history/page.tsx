@@ -1,17 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
-
-const client = generateClient();
-const models = client.models as any;
-
-type HistoryEntry = any;
+import { models } from "@/lib/amplifyClient";
+import type { HistoryEntry } from "@/lib/amplifyClient";
 
 export default function HistoryPage() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -19,7 +15,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     const sub = models.HistoryEntry.observeQuery({}).subscribe({
-      next: ({ items }: any) => {
+      next: ({ items }: { items: HistoryEntry[] }) => {
         const sorted = [...items].sort((a, b) => b.year - a.year);
         setEntries(sorted);
         setLoading(false);
@@ -120,7 +116,7 @@ export default function HistoryPage() {
 }
 
 // History Card Component
-function HistoryCard({ entry, isPrivate }: { entry: any; isPrivate: boolean }) {
+function HistoryCard({ entry, isPrivate }: { entry: HistoryEntry; isPrivate: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const cardStyle = isPrivate
@@ -180,6 +176,7 @@ function HistoryCard({ entry, isPrivate }: { entry: any; isPrivate: boolean }) {
           >
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              allowedElements={['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'code', 'pre', 'blockquote', 'strong', 'em', 'br', 'hr']}
               components={{
                 h1: ({ children }) => (
                   <h1 className="mb-3 mt-4 font-serif text-2xl font-bold text-primary-800 first:mt-0">

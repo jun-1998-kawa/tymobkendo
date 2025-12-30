@@ -6,10 +6,11 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
+import type { News } from "@/lib/amplifyClient";
 import outputs from "../../amplify_outputs.json";
 
 export default function NewsSection() {
-  const [newsList, setNewsList] = useState<any[]>([]);
+  const [newsList, setNewsList] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +27,16 @@ export default function NewsSection() {
         const client = generateClient({
           authMode: 'apiKey'
         });
-        const models = client.models as any;
+        const models = client.models as {
+          News: {
+            observeQuery: (options?: unknown) => {
+              subscribe: (callbacks: {
+                next: (result: { items: News[] }) => void;
+                error?: (err: Error) => void;
+              }) => { unsubscribe: () => void };
+            };
+          };
+        };
 
         // Check if News model exists
         if (!models.News) {
@@ -39,7 +49,7 @@ export default function NewsSection() {
         const sub = models.News.observeQuery({
           filter: { isPublished: { eq: true } },
         }).subscribe({
-          next: ({ items }: any) => {
+          next: ({ items }) => {
             const sorted = [...items]
               .sort((a, b) => {
                 // ピン留めを優先
@@ -54,7 +64,7 @@ export default function NewsSection() {
             setNewsList(sorted);
             setLoading(false);
           },
-          error: (err: any) => {
+          error: (err) => {
             console.error("Error fetching news:", err);
             const errorMessage = err?.message || err?.toString() || "ニュースの取得に失敗しました";
             setError(errorMessage);
@@ -108,7 +118,7 @@ export default function NewsSection() {
 }
 
 // News Card Component with Atlassian-inspired Design
-function NewsCard({ news }: { news: any }) {
+function NewsCard({ news }: { news: News }) {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, { bg: string; text: string; border: string }> = {
       お知らせ: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },

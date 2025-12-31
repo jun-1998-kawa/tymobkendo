@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
 import { models } from "@/lib/amplifyClient";
-import type { SiteConfig, HeroSlide } from "@/lib/amplifyClient";
+import type { SiteConfig, HeroSlide, News } from "@/lib/amplifyClient";
 import FadeIn from "@/components/ui/FadeIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 
@@ -26,6 +26,7 @@ export default function AppDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  const [newsList, setNewsList] = useState<News[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -67,6 +68,25 @@ export default function AppDashboard() {
           favoriteCount: myValidFavorites.length,
           threadCount: threadsResult.data?.length || 0,
         });
+
+        // お知らせを取得
+        try {
+          const newsResult = await models.News.list({
+            filter: { isPublished: { eq: true } },
+          });
+          if (newsResult.data) {
+            const sorted = [...newsResult.data]
+              .sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
+              })
+              .slice(0, 5);
+            setNewsList(sorted);
+          }
+        } catch (newsError) {
+          console.error("Error loading news:", newsError);
+        }
 
         // 背景画像を取得（トップページと同じ画像を使用）
         try {
@@ -243,6 +263,72 @@ export default function AppDashboard() {
           ))}
         </Stagger>
       </div>
+
+      {/* News Section */}
+      {newsList.length > 0 && (
+        <div>
+          <FadeIn delay={0.3}>
+            <h2 className="mb-4 text-lg font-bold text-gray-900">
+              <span className="underline-gold">お知らせ</span>
+            </h2>
+          </FadeIn>
+
+          <FadeIn delay={0.4}>
+            <div className="border border-gray-200 bg-white shadow-sm">
+              {newsList.map((news, index) => (
+                <Link key={news.id} href={`/news/${news.id}`}>
+                  <motion.div
+                    whileHover={{ backgroundColor: "rgba(211, 47, 47, 0.03)" }}
+                    className={`group flex items-start gap-4 p-4 transition-colors ${
+                      index !== newsList.length - 1 ? "border-b border-gray-100" : ""
+                    }`}
+                  >
+                    {/* Date */}
+                    <div className="shrink-0 text-center">
+                      <p className="text-xs text-gray-400">
+                        {new Date(news.publishedAt || news.createdAt).toLocaleDateString("ja-JP", { month: "short" })}
+                      </p>
+                      <p className="text-xl font-bold text-gray-700">
+                        {new Date(news.publishedAt || news.createdAt).getDate()}
+                      </p>
+                    </div>
+
+                    {/* Content */}
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-2">
+                        <span className="bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
+                          {news.category}
+                        </span>
+                        {news.isPinned && (
+                          <span className="bg-gold-50 px-2 py-0.5 text-xs font-medium text-gold-700">
+                            重要
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="font-medium text-gray-900 transition-colors group-hover:text-accent-600">
+                        {news.title}
+                      </h3>
+                      {news.excerpt && (
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-1">{news.excerpt}</p>
+                      )}
+                    </div>
+
+                    {/* Arrow */}
+                    <svg
+                      className="h-5 w-5 shrink-0 text-gray-300 transition-all group-hover:translate-x-1 group-hover:text-accent-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </motion.div>
+                </Link>
+              ))}
+            </div>
+          </FadeIn>
+        </div>
+      )}
 
     </div>
   );

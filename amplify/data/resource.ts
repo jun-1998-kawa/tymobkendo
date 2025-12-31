@@ -67,7 +67,7 @@ const schema = a.schema({
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
+      allow.authenticated().to(["read"]), // ログイン済みユーザー全員が読み取り可能
       allow.groups(["MEMBERS"]).to(["read", "create", "update"]),
       allow.groups(["ADMINS"]), // 全権限（create, read, update, delete）
     ]),

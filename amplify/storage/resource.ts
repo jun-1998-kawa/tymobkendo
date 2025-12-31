@@ -19,11 +19,12 @@ import { defineStorage } from "@aws-amplify/backend";
 export const storage = defineStorage({
   name: "media",
   access: (allow) => ({
-    // 公開アセット（ヒーロー画像、ニュース画像等）
+    // 公開アセット（ヒーロー画像、ニュース画像、歴史動画等）
     // 誰でも読み取り可能、管理者のみ書き込み・削除可能
     "public/*": [
       allow.guest.to(["read"]),
       allow.authenticated.to(["read"]),
+      allow.groups(["MEMBERS"]).to(["read"]),
       allow.groups(["ADMINS"]).to(["read", "write", "delete"]),
     ],
 

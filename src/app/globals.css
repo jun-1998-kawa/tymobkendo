@@ -19,6 +19,11 @@
     @apply font-sans antialiased;
   }
 
+  /* 見出しを全てNoto Serif JP（和モダン書体）に統一 */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+
   a {
     @apply text-inherit no-underline;
   }
@@ -101,7 +106,7 @@
 
   /* モダンカード基本スタイル */
   .card-modern {
-    @apply relative overflow-hidden rounded-lg border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-sm transition-all duration-300;
+    @apply relative overflow-hidden border border-gray-100 bg-gradient-to-br from-white to-gray-50 shadow-sm transition-all duration-300;
   }
 
   .card-modern:hover {

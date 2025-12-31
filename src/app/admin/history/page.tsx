@@ -279,9 +279,9 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
 
     try {
       for (const file of Array.from(files)) {
-        // 動画ファイルサイズチェック（100MB制限）
-        if (file.size > 100 * 1024 * 1024) {
-          alert(`ファイル「${file.name}」は100MBを超えています。100MB以下のファイルを選択してください。`);
+        // 動画ファイルサイズチェック（1GB制限）
+        if (file.size > 1024 * 1024 * 1024) {
+          alert(`ファイル「${file.name}」は1GBを超えています。1GB以下のファイルを選択してください。`);
           continue;
         }
 
@@ -477,7 +477,7 @@ function HistoryModal({ entry, onClose }: { entry: HistoryEntry | null; onClose:
                 className="w-full cursor-pointer file:mr-4 file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white file:transition-all hover:file:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               />
               <p className="mt-2 text-xs text-primary-500">
-                対応形式: MP4, WebM, MOV など（最大100MB/ファイル）
+                対応形式: MP4, WebM, MOV など（最大1GB/ファイル）
               </p>
               {uploadingVideo && (
                 <div className="mt-3 flex items-center gap-2 text-sm text-blue-600">

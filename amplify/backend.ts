@@ -80,4 +80,34 @@ try {
   // エラーが発生してもデプロイは続行（フォールバックが機能する）
 }
 
+// postConfirmation LambdaにCognito AdminAddUserToGroup権限を付与
+try {
+  const authStack = Stack.of(backend.auth.resources.userPool);
+  const userPoolArn = backend.auth.resources.userPool.userPoolArn;
+  const allConstructs = authStack.node.findAll();
+
+  // Lambda関数を探す（post-confirmationを含むもの）
+  for (const construct of allConstructs) {
+    if (
+      construct.node.id.toLowerCase().includes("postconfirmation") ||
+      construct.node.id.toLowerCase().includes("post-confirmation")
+    ) {
+      const lambda = construct as any;
+      if (typeof lambda.addToRolePolicy === "function") {
+        // Cognito AdminAddUserToGroup権限を付与
+        lambda.addToRolePolicy(
+          new PolicyStatement({
+            actions: ["cognito-idp:AdminAddUserToGroup"],
+            resources: [userPoolArn],
+          })
+        );
+        console.log("Successfully configured postConfirmation Lambda with Cognito access");
+        break;
+      }
+    }
+  }
+} catch (error) {
+  console.warn("Could not configure postConfirmation Lambda:", error);
+}
+
 export { backend };

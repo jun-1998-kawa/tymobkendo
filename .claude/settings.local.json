@@ -25,7 +25,8 @@
       "Bash(cat:*)",
       "WebFetch(domain:docs.amplify.aws)",
       "WebFetch(domain:vercel.com)",
-      "Bash(npm run test)"
+      "Bash(npm run test)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

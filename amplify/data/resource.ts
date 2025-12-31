@@ -125,6 +125,24 @@ const schema = a.schema({
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
+  // 招待コード管理
+  InviteCode: a
+    .model({
+      code: a.string().required(), // 招待コード（一意）
+      isActive: a.boolean().default(true), // 有効/無効
+      usageLimit: a.integer(), // 使用回数上限（nullは無制限）
+      usageCount: a.integer().default(0), // 現在の使用回数
+      expiresAt: a.datetime(), // 有効期限（nullは無期限）
+      note: a.string(), // 管理者用メモ
+    })
+    .secondaryIndexes((index) => [
+      index("code"), // codeで検索するためのGSI
+    ])
+    .authorization((allow) => [
+      allow.publicApiKey().to(["read", "update"]), // Pre-sign-up Lambdaからのアクセス（認証前）
+      allow.groups(["ADMINS"]).to(["create", "read", "update", "delete"]),
+    ]),
+
   // サイト設定（トップページのコンテンツ管理）
   SiteConfig: a
     .model({

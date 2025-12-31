@@ -32,6 +32,11 @@ export default function AdminDashboard() {
       description: "歴史アーカイブ管理",
     },
     {
+      href: "/admin/invite-codes",
+      title: "招待コード",
+      description: "招待コード発行・管理",
+    },
+    {
       href: "/app/board",
       title: "掲示板モデレーション",
       description: "投稿監視・管理",

@@ -12,11 +12,16 @@
 
   html,
   body {
-    @apply max-w-full overflow-x-hidden;
+    @apply max-w-full overflow-x-hidden font-serif;
   }
 
   body {
-    @apply font-serif antialiased;
+    @apply antialiased;
+  }
+
+  /* 全要素に和モダン書体を強制適用 */
+  * {
+    font-family: "Noto Serif JP", serif !important;
   }
 
   a {

@@ -229,7 +229,7 @@ export default function Home() {
             {siteConfig?.heroTitle || "戸山高校剣道部OB会"}
           </h1>
           {siteConfig?.heroSubtitle && (
-            <p className="mt-4 text-lg text-white/90 md:text-xl"
+            <p className="mt-4 font-serif text-lg text-white/90 md:text-xl"
               style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
               {siteConfig.heroSubtitle}
             </p>
@@ -249,7 +249,7 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveSection(activeSection === "news" ? null : "news")}
-              className="group flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-6 py-3 text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="group flex items-center gap-2 border border-white/30 bg-white/10 px-6 py-3 font-serif text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
             >
               <span>お知らせ</span>
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-xs">
@@ -263,7 +263,7 @@ export default function Home() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="rounded-full bg-white px-8 py-3 text-sm font-semibold text-primary-900 shadow-lg transition-all hover:bg-white/90"
+              className="bg-white px-8 py-3 font-serif text-sm font-semibold text-primary-900 shadow-lg transition-all hover:bg-white/90"
             >
               会員ログイン
             </motion.div>

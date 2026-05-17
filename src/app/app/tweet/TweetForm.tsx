@@ -42,6 +42,11 @@ export function TweetForm({
 
   const handlePost = async () => {
     if (disabled) return;
+    // ハード制限: プログラム経由でも 140 文字を超える Tweet は弾く
+    if (content.length > MAX_CHARACTERS) {
+      setError(`${MAX_CHARACTERS}文字以内で入力してください`);
+      return;
+    }
 
     setLoading(true);
 
@@ -53,15 +58,10 @@ export function TweetForm({
         authorId: currentUserId,
       };
 
-      // リプライの場合
+      // リプライの場合は replyToId のみ設定。
+      // replyCount はクライアント側で派生計算するので update しない。
       if (replyTo) {
         tweetData.replyToId = replyTo.id;
-
-        // 元投稿のreplyCountを増やす
-        await models.Tweet.update({
-          id: replyTo.id,
-          replyCount: (replyTo.replyCount || 0) + 1,
-        });
       }
 
       await models.Tweet.create(tweetData);
@@ -118,7 +118,7 @@ export function TweetForm({
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onKeyDown={handleKeyDown}
-            maxLength={MAX_CHARACTERS + 10}
+            maxLength={MAX_CHARACTERS}
             placeholder={replyTo ? "返信をツイート" : "いまどうしてる？"}
             className="w-full resize-none border-0 text-xl placeholder-gray-500 focus:outline-none focus:ring-0 bg-transparent"
             rows={3}

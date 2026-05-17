@@ -135,7 +135,7 @@ function HistoryCard({ entry, isPrivate }: { entry: HistoryEntry; isPrivate: boo
               path: `public/${path}`,
               options: {
                 validateObjectExistence: false,
-                expiresIn: 3600,
+                expiresIn: 86400,
               },
             });
             return result.url.toString();

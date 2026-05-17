@@ -12,8 +12,13 @@ export function TweetList({
   onDelete,
   onReply,
 }: TweetListProps) {
-  // メインのツイート（リプライを除く）
-  const mainTweets = tweets.filter((t) => !t.replyToId);
+  // メインのツイート（リプライを除く）。
+  // ソフト削除された親も「可視リプライがあれば」残してプレースホルダ表示する。
+  const mainTweets = tweets.filter((t) => {
+    if (t.replyToId) return false;
+    if (!t.isHidden) return true;
+    return tweets.some((r) => r.replyToId === t.id && !r.isHidden);
+  });
 
   if (mainTweets.length === 0) {
     return (

@@ -95,7 +95,7 @@ export default function Home() {
                   try {
                     const url = await getUrl({
                       path: `public/${slide.mediaPath}`,
-                      options: { validateObjectExistence: false, expiresIn: 3600 }
+                      options: { validateObjectExistence: false, expiresIn: 86400 }
                     });
                     return {
                       mediaPath: url.url.toString(),
@@ -117,7 +117,7 @@ export default function Home() {
                 config.heroImagePaths.map(async (path: string) => {
                   const url = await getUrl({
                     path: `public/${path}`,
-                    options: { validateObjectExistence: false, expiresIn: 3600 }
+                    options: { validateObjectExistence: false, expiresIn: 86400 }
                   });
                   return url.url.toString();
                 })
@@ -126,7 +126,7 @@ export default function Home() {
             } else if (config.heroImagePath) {
               const url = await getUrl({
                 path: `public/${config.heroImagePath}`,
-                options: { validateObjectExistence: false, expiresIn: 3600 }
+                options: { validateObjectExistence: false, expiresIn: 86400 }
               });
               setHeroImageUrls([url.url.toString()]);
             }

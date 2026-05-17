@@ -1,16 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { uploadData, getUrl } from "aws-amplify/storage";
+import { getUrl } from "aws-amplify/storage";
+import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { models } from "@/lib/amplifyClient";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useImageUpload } from "@/hooks/useImageUpload";
 import { formatDateTime } from "@/utils/dateFormatter";
 import type { BoardThread, BoardMessage } from "@/lib/amplifyClient";
 
 export default function ThreadPage() {
   const params = useParams();
   const threadId = params.threadId as string;
+  const { isAdmin } = useIsAdmin();
 
   const [thread, setThread] = useState<BoardThread | null>(null);
   const [messages, setMessages] = useState<BoardMessage[]>([]);
@@ -18,39 +22,62 @@ export default function ThreadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [imagePaths, setImagePaths] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const [currentUserName, setCurrentUserName] = useState<string>("");
+
+  const {
+    imagePaths,
+    uploading,
+    error: uploadError,
+    handleImageUpload,
+    handleRemoveImage,
+    reset: resetImages,
+  } = useImageUpload({
+    basePath: "members",
+    userId: currentUserId,
+    category: "board",
+    maxFiles: 4,
+    onError: (err) => {
+      setError(err.message);
+      setTimeout(() => setError(""), 5000);
+    },
+  });
 
   useEffect(() => {
-    // 現在のユーザーIDを取得
-    const fetchCurrentUserId = async () => {
+    const fetchCurrentUser = async () => {
       try {
-        const { getCurrentUser } = await import("aws-amplify/auth");
         const user = await getCurrentUser();
+        const attributes = await fetchUserAttributes();
         setCurrentUserId(user.userId);
+
+        const familyName = attributes.family_name || "";
+        const givenName = attributes.given_name || "";
+        const displayName = `${familyName} ${givenName}`.trim() || "名無しさん";
+        setCurrentUserName(displayName);
       } catch (err) {
-        console.error("Error fetching current user:", err);
+        console.error("Error fetching user:", err);
       }
     };
 
-    fetchCurrentUserId();
+    fetchCurrentUser();
 
     // スレッド情報取得
-    models.BoardThread.get({ id: threadId }).then((result: { data: BoardThread | null }) => {
-      if (result.data) {
-        setThread(result.data);
+    models.BoardThread.get({ id: threadId }).then(
+      (result: { data: BoardThread | null }) => {
+        if (result.data) {
+          setThread(result.data);
+        }
       }
-    });
+    );
 
-    // メッセージ購読
+    // メッセージ購読（ソフト削除はリストに残し「削除されました」表示にする）
     const sub = models.BoardMessage.observeQuery({
-      filter: { threadId: { eq: threadId } }
+      filter: { threadId: { eq: threadId } },
     }).subscribe({
       next: ({ items }: { items: BoardMessage[] }) => {
-        const visible = items.filter((m) => !m.isHidden);
-        const sorted = [...visible].sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        const sorted = [...items].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         setMessages(sorted);
       },
@@ -58,51 +85,6 @@ export default function ThreadPage() {
 
     return () => sub.unsubscribe();
   }, [threadId]);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    if (imagePaths.length + files.length > 4) {
-      setError("画像は最大4枚までアップロードできます");
-      setTimeout(() => setError(""), 5000);
-      return;
-    }
-
-    setUploading(true);
-    const uploadedPaths: string[] = [];
-
-    try {
-      for (const file of Array.from(files)) {
-        const timestamp = Date.now();
-        const randomStr = Math.random().toString(36).substring(7);
-        const fileName = `board-${timestamp}-${randomStr}-${file.name}`;
-
-        // members/{entity_id}/ パスを使用（2階層まで）
-        await uploadData({
-          path: `members/${currentUserId}/${fileName}`,
-          data: file,
-          options: {
-            contentType: file.type,
-          },
-        }).result;
-
-        uploadedPaths.push(fileName);
-      }
-
-      setImagePaths([...imagePaths, ...uploadedPaths]);
-    } catch (error) {
-      console.error("Error uploading images:", error);
-      setError("画像のアップロードに失敗しました");
-      setTimeout(() => setError(""), 5000);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setImagePaths(imagePaths.filter((_, i) => i !== index));
-  };
 
   const handlePost = async () => {
     if (!body.trim()) return;
@@ -116,10 +98,11 @@ export default function ThreadPage() {
         threadId,
         body: body.trim(),
         imagePaths: imagePaths.length > 0 ? imagePaths : null,
+        author: currentUserName,
         authorId: currentUserId,
       });
       setBody("");
-      setImagePaths([]);
+      resetImages();
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
@@ -131,22 +114,33 @@ export default function ThreadPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  // 5ch 風: 自分または管理者のみ削除可、レス番号がズレないようソフト削除に統一
+  const handleDelete = async (message: BoardMessage) => {
     if (!confirm("このメッセージを削除しますか？")) return;
-
     try {
-      await models.BoardMessage.delete({ id });
+      await models.BoardMessage.update({
+        id: message.id,
+        isHidden: true,
+      });
     } catch (e) {
       const message = e instanceof Error ? e.message : "削除に失敗しました";
       alert(message);
     }
   };
 
+  const displayError = error || uploadError;
+
   return (
-    <div className="mx-auto max-w-5xl" style={{ fontFamily: "'Noto Sans JP', sans-serif" }}>
+    <div
+      className="mx-auto max-w-5xl"
+      style={{ fontFamily: "'Noto Sans JP', sans-serif" }}
+    >
       {/* Back Button */}
       <div className="bg-[#EFEFEF] border-b border-gray-400 px-4 py-2">
-        <Link href="/app/board" className="text-sm text-blue-700 hover:underline">
+        <Link
+          href="/app/board"
+          className="text-sm text-blue-700 hover:underline"
+        >
           ← 掲示板一覧に戻る
         </Link>
       </div>
@@ -240,9 +234,9 @@ export default function ThreadPage() {
             </div>
           )}
 
-          {error && (
+          {displayError && (
             <div className="mt-2 text-sm text-red-700 bg-red-50 border border-red-300 p-2">
-              {error}
+              {displayError}
             </div>
           )}
         </div>
@@ -260,6 +254,8 @@ export default function ThreadPage() {
               key={msg.id}
               message={msg}
               index={index + 1}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
               onDelete={handleDelete}
             />
           ))
@@ -273,22 +269,32 @@ export default function ThreadPage() {
 function MessageRow({
   message,
   index,
+  currentUserId,
+  isAdmin,
   onDelete,
 }: {
   message: BoardMessage;
   index: number;
-  onDelete: (id: string) => void;
+  currentUserId: string;
+  isAdmin: boolean;
+  onDelete: (message: BoardMessage) => void;
 }) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchImageUrls = async () => {
-      if (message.imagePaths && message.imagePaths.length > 0 && message.authorId) {
+      if (
+        message.imagePaths &&
+        message.imagePaths.length > 0 &&
+        message.authorId &&
+        !message.isHidden
+      ) {
         const urls = await Promise.all(
           message.imagePaths.map(async (path: string) => {
             try {
-              // members/{authorId}/ パスから画像を取得
-              const urlResult = await getUrl({ path: `members/${message.authorId}/${path}` });
+              const urlResult = await getUrl({
+                path: `members/${message.authorId}/${path}`,
+              });
               return urlResult.url.toString();
             } catch (err) {
               console.error("Error getting image URL:", err);
@@ -301,12 +307,28 @@ function MessageRow({
     };
 
     fetchImageUrls();
-  }, [message.imagePaths, message.authorId]);
+  }, [message.imagePaths, message.authorId, message.isHidden]);
 
-  // 簡易ID生成（最後8文字）
-  const generateId = (createdAt: string) => {
-    return createdAt.slice(-8).replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
-  };
+  // 5ch 風の ID は投稿者 ID の先頭 8 桁から導出（短すぎる createdAt 由来 ID で衝突するのを避ける）
+  const displayId = (message.authorId || message.id).slice(0, 8).toUpperCase();
+  const canDelete =
+    !message.isHidden &&
+    (isAdmin || (!!currentUserId && message.authorId === currentUserId));
+
+  // ソフト削除されたレスはレス番号を保ったまま「削除されました」表示
+  if (message.isHidden) {
+    return (
+      <div className="border-b border-gray-200 px-4 py-3 bg-gray-50">
+        <div className="flex flex-wrap items-baseline gap-2 text-sm">
+          <span className="font-mono text-gray-500">{index}</span>
+          <span className="text-gray-500">:</span>
+          <span className="italic text-gray-500">
+            このメッセージは削除されました
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-b border-gray-200 px-4 py-3 hover:bg-gray-50">
@@ -321,15 +343,15 @@ function MessageRow({
         <span className="text-gray-600 text-xs">
           {formatDateTime(message.createdAt)}
         </span>
-        <span className="text-gray-600 text-xs">
-          ID:{generateId(message.createdAt)}
-        </span>
-        <button
-          onClick={() => onDelete(message.id)}
-          className="ml-auto text-xs text-red-600 hover:underline"
-        >
-          [削除]
-        </button>
+        <span className="text-gray-600 text-xs">ID:{displayId}</span>
+        {canDelete && (
+          <button
+            onClick={() => onDelete(message)}
+            className="ml-auto text-xs text-red-600 hover:underline"
+          >
+            [削除]
+          </button>
+        )}
       </div>
 
       {/* Content */}

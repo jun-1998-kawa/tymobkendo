@@ -60,11 +60,35 @@ export default function NewsManagementPage() {
     }
   };
 
+  // 既定の「削除」はソフトに非公開化（Deep Link 404 を避けるため）
   const handleDelete = async (news: News) => {
-    if (!confirm(`「${news.title}」を削除してもよろしいですか？\n\nこの操作は取り消せません。`)) {
+    if (
+      !confirm(
+        `「${news.title}」を非公開にしますか？\n\n公開ページから見えなくなりますが、URL アクセスは引き続き可能です。`
+      )
+    ) {
       return;
     }
+    try {
+      await models.News.update({ id: news.id, isPublished: false });
+    } catch (error) {
+      console.error("Error unpublishing news:", error);
+      alert("非公開化に失敗しました");
+    }
+  };
 
+  // 完全削除は別ボタンで二重確認
+  const handleHardDelete = async (news: News) => {
+    if (
+      !confirm(
+        `「${news.title}」を完全に削除します。\n\n外部に共有された URL も 404 になります。本当によろしいですか？`
+      )
+    ) {
+      return;
+    }
+    if (!confirm("この操作は取り消せません。続行しますか？")) {
+      return;
+    }
     try {
       await models.News.delete({ id: news.id });
     } catch (error) {
@@ -157,6 +181,7 @@ export default function NewsManagementPage() {
                       onTogglePin={() => handleTogglePin(news)}
                       onEdit={() => setEditingNews(news)}
                       onDelete={() => handleDelete(news)}
+                      onHardDelete={() => handleHardDelete(news)}
                     />
                   ))}
                 </tbody>
@@ -182,7 +207,7 @@ export default function NewsManagementPage() {
   );
 }
 
-function NewsRow({ news, onTogglePublish, onTogglePin, onEdit, onDelete }: any) {
+function NewsRow({ news, onTogglePublish, onTogglePin, onEdit, onDelete, onHardDelete }: any) {
   const getCategoryBadge = (category: string) => {
     const styles: Record<string, string> = {
       お知らせ: "bg-blue-100 text-blue-800",
@@ -274,9 +299,19 @@ function NewsRow({ news, onTogglePublish, onTogglePin, onEdit, onDelete }: any) 
           <button
             onClick={onDelete}
             className="rounded-lg bg-red-100 px-3 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-200"
+            title="非公開化（既存 URL は引き続き有効）"
           >
             削除
           </button>
+          {!news.isPublished && (
+            <button
+              onClick={onHardDelete}
+              className="rounded-lg border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-700 transition-colors hover:bg-red-50"
+              title="完全削除（取り消し不可・URL も 404 になる）"
+            >
+              完全削除
+            </button>
+          )}
         </div>
       </td>
     </motion.tr>

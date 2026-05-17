@@ -48,20 +48,15 @@ async function findByCode(code: string): Promise<InviteCodeRecord | null> {
 
 async function incrementUsage(id: string, current: number): Promise<void> {
   if (!INVITE_CODE_TABLE) return;
-  try {
-    await ddb.send(
-      new UpdateCommand({
-        TableName: INVITE_CODE_TABLE,
-        Key: { id },
-        UpdateExpression: "SET usageCount = :new",
-        ConditionExpression: "attribute_not_exists(usageCount) OR usageCount = :old",
-        ExpressionAttributeValues: { ":new": current + 1, ":old": current },
-      })
-    );
-  } catch (err) {
-    // インクリメント失敗はサインアップ自体をブロックしない
-    console.error("Failed to increment usageCount:", err);
-  }
+  await ddb.send(
+    new UpdateCommand({
+      TableName: INVITE_CODE_TABLE,
+      Key: { id },
+      UpdateExpression: "SET usageCount = :new",
+      ConditionExpression: "attribute_not_exists(usageCount) OR usageCount = :old",
+      ExpressionAttributeValues: { ":new": current + 1, ":old": current },
+    })
+  );
 }
 
 /**
@@ -126,8 +121,23 @@ export const handler: PreSignUpTriggerHandler = async (event) => {
         }
       }
 
-      // インクリメント (失敗してもサインアップは通す)
-      await incrementUsage(record.id, record.usageCount ?? 0);
+      // 楽観ロックでインクリメント。
+      // ConditionalCheckFailedException は他のサインアップとの競合 → 上限到達の可能性が高いので拒否。
+      try {
+        await incrementUsage(record.id, record.usageCount ?? 0);
+      } catch (err) {
+        const name = (err as { name?: string })?.name;
+        if (name === "ConditionalCheckFailedException") {
+          throw new Error(
+            "招待コードの使用回数が上限に達した可能性があります。少し時間をおいて再度お試しください。"
+          );
+        }
+        // 通信障害等は安全側に倒し、サインアップを止める
+        console.error("Failed to increment usageCount:", err);
+        throw new Error(
+          "招待コードの処理に失敗しました。時間をおいて再度お試しください。"
+        );
+      }
 
       return event;
     } catch (err) {

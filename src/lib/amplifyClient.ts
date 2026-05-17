@@ -60,7 +60,7 @@ export interface BoardMessage {
   threadId: string;
   body: string;
   imagePaths?: string[] | null;
-  author?: string | null;
+  author?: string | null; // 投稿者の表示名（Cognito の姓名キャッシュ）
   authorId?: string | null;
   isHidden?: boolean | null;
   owner?: string | null;

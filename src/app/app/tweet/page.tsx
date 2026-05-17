@@ -37,15 +37,13 @@ export default function TweetPage() {
 
     fetchCurrentUser();
 
-    // Tweetを購読
+    // Tweetを購読（isHidden もそのまま残す。TweetCard 側で「削除されました」プレースホルダを描画するため）
     const tweetSub = models.Tweet.observeQuery({}).subscribe({
       next: ({ items }: { items: Tweet[] }) => {
-        const sorted = items
-          .filter((t) => !t.isHidden)
-          .sort(
-            (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          );
+        const sorted = [...items].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         setTweets(sorted);
       },
     });
@@ -64,30 +62,42 @@ export default function TweetPage() {
   }, []);
 
   const handleDelete = async (tweet: Tweet) => {
-    // リプライがある場合は警告
-    if ((tweet.replyCount ?? 0) > 0) {
+    // リプライ数はクライアントの購読データから派生計算する。
+    // （Tweet.replyCount フィールドは認可上 owner しか更新できず信頼できないため）
+    const replyCount = tweets.filter(
+      (t) => t.replyToId === tweet.id && !t.isHidden
+    ).length;
+
+    if (replyCount > 0) {
       if (
         !confirm(
-          `このツイートには${tweet.replyCount}件のリプライがあります。削除すると「このツイートは削除されました」と表示されます。削除しますか？`
+          `このツイートには${replyCount}件のリプライがあります。削除すると「このツイートは削除されました」と表示されます。削除しますか？`
         )
       ) {
         return;
       }
-      // ソフト削除（isHidden = true）
+      // ソフト削除（isHidden = true）。リプライ文脈を保つ。
       try {
-        await models.Tweet.update({
-          id: tweet.id,
-          isHidden: true,
-        });
+        await models.Tweet.update({ id: tweet.id, isHidden: true });
       } catch (e) {
         const message = e instanceof Error ? e.message : "削除に失敗しました";
         alert(message);
       }
     } else {
-      // リプライがない場合は完全削除
+      // リプライが無ければ完全削除
       if (!confirm("この投稿を削除しますか？")) return;
       try {
         await models.Tweet.delete({ id: tweet.id });
+        // 自分が押した Favorite だけは削除を試みる（他人の Favorite は authz で消せないので
+        // DB 上に残るが、お気に入りページは tweet.find が null になるため UI からは消える）
+        const ownFavoritesOnThisTweet = favorites.filter(
+          (f) => f.tweetId === tweet.id && f.owner === currentUserId
+        );
+        await Promise.allSettled(
+          ownFavoritesOnThisTweet.map((f) =>
+            models.Favorite.delete({ id: f.id })
+          )
+        );
       } catch (e) {
         const message = e instanceof Error ? e.message : "削除に失敗しました";
         alert(message);

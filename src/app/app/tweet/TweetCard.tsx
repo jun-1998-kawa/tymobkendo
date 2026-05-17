@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { getUrl } from "aws-amplify/storage";
 import Image from "next/image";
-import { client, models } from "@/lib/amplifyClient";
+import { models } from "@/lib/amplifyClient";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { formatRelativeTime } from "@/utils/dateFormatter";
-import type { TweetCardProps, Tweet, Favorite } from "./types";
+import type { TweetCardProps } from "./types";
 
 /**
  * 個別ツイート表示コンポーネント
@@ -21,6 +22,7 @@ export function TweetCard({
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const { isAdmin } = useIsAdmin();
 
   useEffect(() => {
     const fetchImageUrls = async () => {
@@ -43,86 +45,105 @@ export function TweetCard({
     fetchImageUrls();
   }, [tweet.imagePaths, tweet.authorId]);
 
+  // 自分のいいね判定は owner（Cognito sub）で一本化。
+  // favoriteCount / replyCount は AppSync の認可で非 owner からは update できないため、
+  // クライアント側で派生計算したものを表示する。
+  const tweetFavorites = favorites.filter((f) => f.tweetId === tweet.id);
+  const myFavorite = tweetFavorites.find((f) => f.owner === currentUserId);
+  const isFavorited = !!myFavorite;
+
+  const replies = allTweets.filter((t) => t.replyToId === tweet.id);
+  const visibleReplies = replies.filter((t) => !t.isHidden);
+  const favoriteCount = tweetFavorites.length;
+  const replyCount = visibleReplies.length;
+
+  const canDelete = isAdmin || (!!currentUserId && tweet.authorId === currentUserId);
+
+  // リプライ単独表示時、親が削除済みなら表示は親側のソフト削除欄に任せる。
+  // 親自体が allTweets に存在しないパターンは「ParentMissingNotice」で示す。
+  const parentMissing =
+    !!tweet.replyToId && !allTweets.some((t) => t.id === tweet.replyToId);
+
   const handleFavorite = async () => {
-    if (favoriteLoading) return;
-
-    const userFavorites = favorites.filter((f) => f.tweetId === tweet.id);
-    const myFavorite = userFavorites.find((f) => {
-      if (f.owner) {
-        return f.owner === currentUserId;
-      }
-      return true;
-    });
-
-    const isFavorited = !!myFavorite;
+    if (favoriteLoading || !currentUserId) return;
 
     setFavoriteLoading(true);
     try {
-      if (isFavorited && myFavorite) {
+      if (myFavorite) {
         await models.Favorite.delete({ id: myFavorite.id });
-        const newCount = Math.max((tweet.favoriteCount || 0) - 1, 0);
-        await models.Tweet.update({
-          id: tweet.id,
-          favoriteCount: newCount,
-        });
       } else {
-        const existingFav = favorites.find((f) => f.tweetId === tweet.id);
-        if (existingFav) {
-          console.warn("Favorite already exists for this tweet");
-          setFavoriteLoading(false);
-          return;
-        }
-
         const compositeId = `${tweet.id}#${currentUserId}`;
-        await models.Favorite.create({
-          id: compositeId,
-          tweetId: tweet.id,
-        });
-
-        const newCount = (tweet.favoriteCount || 0) + 1;
-        await models.Tweet.update({
-          id: tweet.id,
-          favoriteCount: newCount,
-        });
+        await models.Favorite.create({ id: compositeId, tweetId: tweet.id });
       }
     } catch (err) {
       console.error("Error toggling favorite:", err);
     } finally {
-      setTimeout(() => {
-        setFavoriteLoading(false);
-      }, 300);
+      setTimeout(() => setFavoriteLoading(false), 300);
     }
   };
 
-  const userFavorites = favorites.filter((f) => f.tweetId === tweet.id);
-  const myFavorite = userFavorites.find((f) => {
-    if (f.owner) {
-      return f.owner === currentUserId;
-    }
-    return true;
-  });
-  const isFavorited = !!myFavorite;
+  // 共通: リプライ展開セクション（プレースホルダ側でも再利用するため変数化）
+  const repliesSection =
+    visibleReplies.length > 0 && !isReply ? (
+      <>
+        <div className="px-4 py-2 border-t border-gray-100">
+          <button
+            onClick={() => setShowReplies(!showReplies)}
+            className="text-sm text-accent-600 hover:text-accent-700 font-medium transition-colors"
+          >
+            {showReplies
+              ? "リプライを非表示"
+              : `リプライを表示 (${visibleReplies.length}件)`}
+          </button>
+        </div>
+        {showReplies && (
+          <div className="border-t border-gray-200">
+            {visibleReplies.map((reply) => (
+              <div key={reply.id} className="pl-12">
+                <TweetCard
+                  tweet={reply}
+                  allTweets={allTweets}
+                  currentUserId={currentUserId}
+                  favorites={favorites}
+                  onDelete={onDelete}
+                  onReply={onReply}
+                  isReply={true}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    ) : null;
 
-  const replies = allTweets.filter((t) => t.replyToId === tweet.id);
-
-  // 削除されたツイートの場合
+  // 削除されたツイート: プレースホルダ + リプライ展開のみを表示する
   if (tweet.isHidden) {
     return (
-      <div className="flex gap-3 border-b border-gray-200 px-4 py-3 bg-gray-50">
-        <div className="flex-shrink-0">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
-            <span className="text-gray-500">−</span>
+      <div className="border-b border-gray-200">
+        <div className="flex gap-3 px-4 py-3 bg-gray-50">
+          <div className="flex-shrink-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-300">
+              <span className="text-gray-500">−</span>
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-gray-500 italic mt-3">
+              このツイートは削除されました
+            </p>
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-gray-500 italic mt-3">このツイートは削除されました</p>
-        </div>
+        {repliesSection}
       </div>
     );
   }
 
   return (
     <div className={`border-b border-gray-200 ${isReply ? "bg-gray-50" : ""}`}>
+      {parentMissing && !isReply && (
+        <div className="border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs italic text-gray-500">
+          返信先のツイートは削除されました
+        </div>
+      )}
       <div className="flex gap-3 px-4 py-3 hover:bg-gray-50 transition cursor-pointer">
         {/* Avatar */}
         <div className="flex-shrink-0">
@@ -209,9 +230,9 @@ export function TweetCard({
                   />
                 </svg>
               </div>
-              {(tweet.replyCount ?? 0) > 0 && (
+              {replyCount > 0 && (
                 <span className="text-sm group-hover:text-gold-600">
-                  {tweet.replyCount}
+                  {replyCount}
                 </span>
               )}
             </button>
@@ -246,77 +267,49 @@ export function TweetCard({
                   />
                 </svg>
               </div>
-              {(tweet.favoriteCount ?? 0) > 0 && (
+              {favoriteCount > 0 && (
                 <span
                   className={`text-sm ${
                     isFavorited ? "text-accent-500" : "group-hover:text-accent-500"
                   }`}
                 >
-                  {tweet.favoriteCount}
+                  {favoriteCount}
                 </span>
               )}
             </button>
 
-            {/* Delete Icon */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(tweet);
-              }}
-              className="flex items-center gap-2 group ml-auto"
-            >
-              <div className="flex items-center justify-center p-2 group-hover:bg-red-50 transition">
-                <svg
-                  className="h-5 w-5 group-hover:text-red-500"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </div>
-            </button>
+            {/* Delete Icon: own post or admin only */}
+            {canDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(tweet);
+                }}
+                className="flex items-center gap-2 group ml-auto"
+                aria-label="削除"
+              >
+                <div className="flex items-center justify-center p-2 group-hover:bg-red-50 transition">
+                  <svg
+                    className="h-5 w-5 group-hover:text-red-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                </div>
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Show Replies Toggle */}
-      {replies.length > 0 && !isReply && (
-        <div className="px-4 py-2 border-t border-gray-100">
-          <button
-            onClick={() => setShowReplies(!showReplies)}
-            className="text-sm text-accent-600 hover:text-accent-700 font-medium transition-colors"
-          >
-            {showReplies
-              ? "リプライを非表示"
-              : `リプライを表示 (${replies.length}件)`}
-          </button>
-        </div>
-      )}
-
-      {/* Replies */}
-      {showReplies && replies.length > 0 && (
-        <div className="border-t border-gray-200">
-          {replies.map((reply) => (
-            <div key={reply.id} className="pl-12">
-              <TweetCard
-                tweet={reply}
-                allTweets={allTweets}
-                currentUserId={currentUserId}
-                favorites={favorites}
-                onDelete={onDelete}
-                onReply={onReply}
-                isReply={true}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      {repliesSection}
     </div>
   );
 }

@@ -24,23 +24,10 @@ export default function FavoritesPage() {
         const user = await getCurrentUser();
         setCurrentUserId(user.userId);
 
-        // 自分のお気に入りを取得
-        // owner フィルターが機能しない場合に備えて、全て取得してからフィルター
+        // 自分のお気に入りのみを抽出。判定は owner（Cognito sub）で一本化する。
         const favSub = models.Favorite.observeQuery({}).subscribe({
           next: ({ items }: { items: Favorite[] }) => {
-            // 複合ID（{tweetId}#{userId}）を使用している場合は、IDから判定
-            const myFavorites = items.filter((fav) => {
-              // owner フィールドがある場合はそれで判定
-              if (fav.owner) {
-                return fav.owner === user.userId;
-              }
-              // カスタムIDを使用している場合は、ID末尾がuserIdと一致するか確認
-              if (fav.id && fav.id.includes('#')) {
-                const userId = fav.id.split('#')[1];
-                return userId === user.userId;
-              }
-              return false;
-            });
+            const myFavorites = items.filter((fav) => fav.owner === user.userId);
             setFavorites(myFavorites);
           },
         });
@@ -161,11 +148,8 @@ function FavoriteTweetCard({
 
     setRemoving(true);
     try {
+      // favoriteCount はクライアント側派生計算に統一したので update しない。
       await models.Favorite.delete({ id: tweet.favoriteId });
-      await models.Tweet.update({
-        id: tweet.id,
-        favoriteCount: Math.max((tweet.favoriteCount || 0) - 1, 0),
-      });
     } catch (err) {
       console.error("Error removing favorite:", err);
       alert("お気に入り解除に失敗しました");

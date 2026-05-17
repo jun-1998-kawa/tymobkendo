@@ -84,8 +84,8 @@ const schema = a.schema({
       isPublic: a.boolean().default(true),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
-      allow.groups(["MEMBERS"]).to(["read"]), // 会員限定はisPublic=falseでUI側制御
+      allow.guest().to(["read"]), // 未ログインユーザーは Identity Pool guest credentials で read
+      allow.groups(["MEMBERS"]).to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
@@ -93,17 +93,17 @@ const schema = a.schema({
   News: a
     .model({
       title: a.string().required(),
-      excerpt: a.string().required(), // 一覧表示用の要約
-      content: a.string().required(), // Markdown対応本文
-      category: a.string().required(), // お知らせ、イベント、活動報告など
+      excerpt: a.string().required(),
+      content: a.string().required(),
+      category: a.string().required(),
       publishedAt: a.datetime(),
       isPublished: a.boolean().default(false),
       isPinned: a.boolean().default(false),
-      imagePaths: a.string().array(), // 画像パスの配列
-      videoPaths: a.string().array(), // 動画パスの配列
+      imagePaths: a.string().array(),
+      videoPaths: a.string().array(),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
+      allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -111,69 +111,63 @@ const schema = a.schema({
   // ヒーロースライド（Phase 2: スライドショー高度化）
   HeroSlide: a
     .model({
-      order: a.integer().required(), // 表示順序（昇順）
-      mediaPath: a.string().required(), // 画像 or 動画のS3パス
-      mediaType: a.enum(["image", "video"]), // メディアタイプ
-      title: a.string(), // スライドごとのタイトル（オプション）
-      subtitle: a.string(), // サブタイトル（オプション）
-      isActive: a.boolean().default(true), // 表示/非表示
-      kenBurnsEffect: a.boolean().default(false), // Ken Burnsエフェクト有効化
+      order: a.integer().required(),
+      mediaPath: a.string().required(),
+      mediaType: a.enum(["image", "video"]),
+      title: a.string(),
+      subtitle: a.string(),
+      isActive: a.boolean().default(true),
+      kenBurnsEffect: a.boolean().default(false),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
+      allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
   // 招待コード管理
+  // Pre-sign-up Lambda は AppSync を経由せず DynamoDB に IAM 直接アクセスする (backend.ts で grant)。
+  // そのため AppSync 側の認可は管理者のみで十分。
   InviteCode: a
     .model({
-      code: a.string().required(), // 招待コード（一意）
-      isActive: a.boolean().default(true), // 有効/無効
-      usageLimit: a.integer(), // 使用回数上限（nullは無制限）
-      usageCount: a.integer().default(0), // 現在の使用回数
-      expiresAt: a.datetime(), // 有効期限（nullは無期限）
-      note: a.string(), // 管理者用メモ
+      code: a.string().required(),
+      isActive: a.boolean().default(true),
+      usageLimit: a.integer(),
+      usageCount: a.integer().default(0),
+      expiresAt: a.datetime(),
+      note: a.string(),
     })
     .secondaryIndexes((index) => [
-      index("code"), // codeで検索するためのGSI
+      index("code"), // GSI: inviteCodesByCode (Lambda 側で使用)
     ])
     .authorization((allow) => [
-      allow.publicApiKey().to(["read", "update"]), // Pre-sign-up Lambdaからのアクセス（認証前）
       allow.groups(["ADMINS"]).to(["create", "read", "update", "delete"]),
     ]),
 
   // サイト設定（トップページのコンテンツ管理）
   SiteConfig: a
     .model({
-      // Heroセクション
       heroTitle: a.string().required(),
       heroSubtitle: a.string().required(),
-      heroImagePath: a.string(), // S3のパス（後方互換性のため残す、非推奨）
-      heroImagePaths: a.string().array(), // 複数画像パス（スライドショー用、Phase 1）
-      heroSlideInterval: a.integer().default(6000), // スライド切替間隔（ms）
-      useHeroSlides: a.boolean().default(false), // HeroSlideモデルを使用するか（Phase 2）
+      heroImagePath: a.string(),
+      heroImagePaths: a.string().array(),
+      heroSlideInterval: a.integer().default(6000),
+      useHeroSlides: a.boolean().default(false),
 
-      // Welcomeセクション
       welcomeTitle: a.string().required(),
       welcomeBody: a.string().required(),
 
-      // Features（JSON文字列で配列管理）
-      // [{icon: "💬", title: "近況投稿", description: "..."}]
       featuresJson: a.string().required(),
 
-      // CTAセクション
       ctaTitle: a.string().required(),
       ctaBody: a.string().required(),
 
-      // フッター
       footerCopyright: a.string().required(),
 
-      // 管理用
-      isActive: a.boolean().default(true), // アクティブな設定（1レコードのみ想定）
+      isActive: a.boolean().default(true),
     })
     .authorization((allow) => [
-      allow.publicApiKey().to(["read"]), // API Keyでゲストアクセス可能
+      allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -185,6 +179,7 @@ export const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: "userPool",
-    apiKeyAuthorizationMode: { expiresInDays: 30 }
-  }
+    // identityPool guest を使うため apiKeyAuthorizationMode は撤去。
+    // userPool (authenticated) と iam (guest 含む) の 2 モード運用。
+  },
 });

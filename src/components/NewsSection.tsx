@@ -23,9 +23,9 @@ export default function NewsSection() {
         // 少し待機してからクライアントを生成（Amplifyの設定が完全に完了するまで）
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // ゲストアクセス用のクライアント（APIキーモード）
+        // ゲストアクセス用のクライアント (Cognito Identity Pool guest 経由の IAM 認証)
         const client = generateClient({
-          authMode: 'apiKey'
+          authMode: 'identityPool'
         });
         const models = client.models as {
           News: {

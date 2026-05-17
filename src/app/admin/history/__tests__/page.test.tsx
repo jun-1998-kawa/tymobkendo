@@ -8,7 +8,9 @@ import HistoryManagementPage from '../page';
 jest.mock('aws-amplify/data');
 jest.mock('aws-amplify/storage');
 
-const mockGenerateClient = generateClient as jest.MockedFunction<typeof generateClient>;
+// `typeof generateClient` is a deeply-nested generic that exceeds TS's recursion
+// limit. We only need .mockReturnValue here, so use a loose Jest mock type.
+const mockGenerateClient = generateClient as unknown as jest.Mock;
 const mockUploadData = uploadData as jest.MockedFunction<typeof uploadData>;
 
 describe('History Management Page', () => {

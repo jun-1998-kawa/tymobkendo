@@ -49,7 +49,8 @@ export default function Home() {
         Amplify.configure(outputs, { ssr: true });
         setAmplifyReady(true);
 
-        const client = generateClient({ authMode: 'apiKey' });
+        // 未ログインユーザーは Cognito Identity Pool の guest credentials で IAM 認証
+        const client = generateClient({ authMode: 'identityPool' });
         const models = client.models as {
           SiteConfig: { list: (options?: unknown) => Promise<{ data: SiteConfig[] | null }> };
           HeroSlide: { list: (options?: unknown) => Promise<{ data: HeroSlide[] | null }> };

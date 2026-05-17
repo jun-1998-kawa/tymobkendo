@@ -90,10 +90,10 @@ export default function NewsDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 to-gold-50">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="text-center">
-          <div className="mb-4 inline-block h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-lg text-primary-600">読み込み中...</p>
+          <div className="kendo-pill mb-4 inline-block h-12 w-12 animate-spin border-4 border-accent-700 border-t-transparent"></div>
+          <p className="text-lg text-primary-700">読み込み中...</p>
         </div>
       </div>
     );
@@ -101,18 +101,21 @@ export default function NewsDetailPage() {
 
   if (error || !news) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 to-gold-50 px-4">
-        <div className="max-w-md rounded-2xl border-2 border-red-200 bg-white p-8 text-center shadow-xl">
-          <div className="mb-4 text-6xl">❌</div>
-          <h1 className="mb-4 font-serif text-3xl font-bold text-primary-800">
-            エラー
+      <div className="flex min-h-screen items-center justify-center bg-white px-4">
+        <div className="card-accent-bar relative max-w-md border border-gray-200 bg-white p-8 pl-9 shadow-md">
+          <h1 className="mb-3 font-serif text-2xl font-bold text-primary-900">
+            ニュースを表示できません
           </h1>
-          <p className="mb-6 text-lg text-primary-600">{error}</p>
+          <p className="mb-6 text-base text-primary-700">{error}</p>
           <Link
             href="/"
-            className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 font-semibold text-white transition-all hover:scale-105"
+            className="group relative inline-flex items-center gap-2 overflow-hidden bg-primary-900 px-6 py-3 font-serif text-sm font-semibold text-white transition-all hover:bg-primary-800"
           >
-            トップページへ
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>トップページへ</span>
+            <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-gradient-to-r from-accent-500 to-gold-500 transition-all duration-300 group-hover:w-full" />
           </Link>
         </div>
       </div>
@@ -120,10 +123,11 @@ export default function NewsDetailPage() {
   }
 
   const getCategoryColor = (category: string) => {
+    // kendo triad — accent (朱) / gold (金) / primary (黒) で統一
     const colors: Record<string, { bg: string; text: string; border: string }> = {
-      お知らせ: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200" },
-      イベント: { bg: "bg-green-50", text: "text-green-700", border: "border-green-200" },
-      活動報告: { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" },
+      お知らせ: { bg: "bg-accent-50", text: "text-accent-700", border: "border-accent-200" },
+      イベント: { bg: "bg-gold-50", text: "text-gold-700", border: "border-gold-300" },
+      活動報告: { bg: "bg-primary-50", text: "text-primary-700", border: "border-primary-200" },
     };
     return colors[category] || colors["お知らせ"];
   };
@@ -138,10 +142,10 @@ export default function NewsDetailPage() {
         <div className="mx-auto max-w-7xl px-4 py-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-blue-600 transition-all hover:gap-3"
+            className="group inline-flex items-center gap-2 font-serif text-sm font-semibold text-primary-700 transition-colors hover:text-accent-700"
           >
             <svg
-              className="h-5 w-5"
+              className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -153,7 +157,7 @@ export default function NewsDetailPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            <span className="font-semibold">トップページに戻る</span>
+            <span>トップページに戻る</span>
           </Link>
         </div>
       </nav>
@@ -166,14 +170,14 @@ export default function NewsDetailPage() {
             <div className="mb-6 flex flex-wrap items-center gap-3">
               {/* Category Badge */}
               <span
-                className={`inline-flex items-center border ${categoryStyle.border} ${categoryStyle.bg} px-2 py-1 text-xs font-semibold uppercase tracking-wide ${categoryStyle.text}`}
+                className={`inline-flex items-center border ${categoryStyle.border} ${categoryStyle.bg} px-3 py-1 text-xs font-semibold tracking-wide ${categoryStyle.text}`}
               >
                 {news.category}
               </span>
 
               {/* Pin Badge */}
               {news.isPinned && (
-                <span className="inline-flex items-center border border-amber-600 bg-amber-50 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                <span className="inline-flex items-center border border-gold-400 bg-gold-50 px-3 py-1 text-xs font-bold tracking-wide text-gold-700">
                   重要
                 </span>
               )}
@@ -188,18 +192,18 @@ export default function NewsDetailPage() {
               </span>
             </div>
 
-            <h1 className="mb-6 text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
+            <h1 className="mb-6 font-serif text-4xl font-bold leading-tight text-primary-900 md:text-5xl">
               {news.title}
             </h1>
 
-            <p className="text-xl leading-relaxed text-gray-600">
+            <p className="text-xl leading-relaxed text-primary-700">
               {news.excerpt}
             </p>
           </header>
         </FadeIn>
 
-        {/* Divider */}
-        <div className="mb-12 h-px bg-gray-300"></div>
+        {/* Divider — 朱→金 のシグネチャ細線 */}
+        <div className="mb-12 h-[2px] w-24 bg-gradient-to-r from-accent-500 to-gold-500 opacity-80"></div>
 
         {/* Images Gallery */}
         {imageUrls.length > 0 && (
@@ -270,7 +274,7 @@ export default function NewsDetailPage() {
                   a: ({ href, children }) => (
                     <a
                       href={href}
-                      className="text-blue-600 underline transition-colors hover:text-blue-800"
+                      className="text-accent-700 underline underline-offset-4 transition-colors hover:text-accent-800"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -278,18 +282,18 @@ export default function NewsDetailPage() {
                     </a>
                   ),
                   blockquote: ({ children }) => (
-                    <blockquote className="my-4 border-l-4 border-blue-500 bg-blue-50 p-4 italic text-gray-700">
+                    <blockquote className="my-4 border-l-4 border-accent-500 bg-accent-50 p-4 text-primary-800">
                       {children}
                     </blockquote>
                   ),
                   code: ({ className, children }) => {
                     const isInline = !className;
                     return isInline ? (
-                      <code className="bg-gray-100 px-2 py-1 font-mono text-sm text-gray-800">
+                      <code className="bg-primary-50 px-2 py-1 font-mono text-sm text-primary-800">
                         {children}
                       </code>
                     ) : (
-                      <code className="block overflow-x-auto bg-gray-900 p-4 font-mono text-sm text-white">
+                      <code className="block overflow-x-auto bg-primary-900 p-4 font-mono text-sm text-white">
                         {children}
                       </code>
                     );
@@ -307,10 +311,10 @@ export default function NewsDetailPage() {
           <div className="mt-12 text-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-3 border-2 border-gray-900 bg-white px-8 py-4 text-lg font-semibold text-gray-900 transition-all duration-300 hover:bg-gray-900 hover:text-white"
+              className="group relative inline-flex items-center justify-center gap-3 overflow-hidden border-2 border-primary-900 bg-white px-8 py-4 font-serif text-base font-semibold text-primary-900 transition-all duration-300 hover:bg-primary-900 hover:text-white"
             >
               <svg
-                className="h-5 w-5"
+                className="h-5 w-5 transition-transform duration-200 group-hover:-translate-x-1"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -330,8 +334,9 @@ export default function NewsDetailPage() {
 
       {/* Footer */}
       <footer className="mt-20 border-t border-gray-200 bg-white px-4 py-12 text-center">
-        <p className="text-sm text-gray-500">
-          © 2024 戸山高校剣道部OB会. All rights reserved.
+        <div className="mx-auto mb-4 h-[2px] w-16 bg-gradient-to-r from-accent-500 to-gold-500 opacity-70" />
+        <p className="text-xs text-gray-500">
+          © {new Date().getFullYear()} 戸山高校剣道部OB会. All rights reserved.
         </p>
       </footer>
     </main>

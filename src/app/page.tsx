@@ -224,13 +224,13 @@ export default function Home() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="mb-12 text-center"
         >
-          <h1 className="font-serif text-4xl font-bold text-white md:text-6xl lg:text-7xl"
-            style={{ textShadow: "0 4px 30px rgba(0,0,0,0.5)" }}>
+          <h1 className="text-shadow-hero font-serif text-4xl font-bold tracking-wide text-white md:text-6xl lg:text-7xl">
             {siteConfig?.heroTitle || "戸山高校剣道部OB会"}
           </h1>
+          {/* 朱→金 のシグネチャグラデーション細線 — タイトル下の装飾 */}
+          <div className="mx-auto mt-6 h-[2px] w-24 bg-gradient-to-r from-accent-500 to-gold-500 opacity-90" />
           {siteConfig?.heroSubtitle && (
-            <p className="mt-4 font-serif text-lg text-white/90 md:text-xl"
-              style={{ textShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+            <p className="text-shadow-hero-soft mt-5 font-serif text-lg text-white/90 md:text-xl">
               {siteConfig.heroSubtitle}
             </p>
           )}
@@ -243,42 +243,47 @@ export default function Home() {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6"
         >
-          {/* News Button */}
+          {/* News Button — secondary (glass) */}
           {newsList.length > 0 && (
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveSection(activeSection === "news" ? null : "news")}
-              className="group flex items-center gap-2 border border-white/30 bg-white/10 px-6 py-3 font-serif text-sm font-medium text-white backdrop-blur-sm transition-all hover:bg-white/20"
+              className="group flex items-center gap-2 border border-white/30 bg-white/10 px-6 py-3 font-serif text-sm font-medium tracking-wide text-white backdrop-blur-sm transition-all hover:border-white/50 hover:bg-white/20"
             >
               <span>お知らせ</span>
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-accent-500 text-xs">
+              <span className="kendo-pill flex h-5 w-5 items-center justify-center bg-accent-500 text-xs font-bold text-white">
                 {newsList.length}
               </span>
             </motion.button>
           )}
 
-          {/* Login Button */}
+          {/* Login Button — primary CTA (white surface, accent underline on hover) */}
           <Link href="/app">
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white px-8 py-3 font-serif text-sm font-semibold text-primary-900 shadow-lg transition-all hover:bg-white/90"
+              className="group relative overflow-hidden bg-white px-8 py-3 font-serif text-sm font-semibold tracking-wide text-primary-900 shadow-lg transition-all hover:shadow-xl"
             >
-              会員ログイン
+              <span className="relative z-10">会員ログイン</span>
+              {/* hover で朱→金の下線が走る */}
+              <span className="absolute bottom-0 left-0 h-[3px] w-0 bg-gradient-to-r from-accent-500 to-gold-500 transition-all duration-300 group-hover:w-full" />
             </motion.div>
           </Link>
         </motion.div>
 
         {/* Slide Indicators */}
         {slides.length > 1 && (
-          <div className="absolute bottom-24 left-1/2 flex -translate-x-1/2 gap-2">
+          <div className="absolute bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-2">
             {slides.map((_, index) => (
               <button
                 key={index}
+                aria-label={`スライド ${index + 1}`}
                 onClick={() => setCurrentSlide(index)}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === currentSlide ? "w-8 bg-white" : "w-1.5 bg-white/50 hover:bg-white/70"
+                className={`kendo-pill h-1.5 transition-all duration-300 ${
+                  index === currentSlide
+                    ? "w-10 bg-gradient-to-r from-accent-500 to-gold-500"
+                    : "w-1.5 bg-white/50 hover:bg-white/80"
                 }`}
               />
             ))}
@@ -307,14 +312,20 @@ export default function Home() {
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25 }}
               onClick={(e) => e.stopPropagation()}
-              className="mx-4 max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-2xl bg-white/95 shadow-2xl backdrop-blur-lg"
+              className="relative mx-4 max-h-[80vh] w-full max-w-2xl overflow-hidden bg-white/95 shadow-2xl backdrop-blur-lg"
             >
+              {/* signature 朱→金 アクセントバー (上端) */}
+              <div className="absolute left-0 right-0 top-0 h-[3px] bg-gradient-to-r from-accent-500 via-accent-700 to-gold-500" />
+
               {/* Header */}
               <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
-                <h2 className="text-xl font-bold text-gray-900">お知らせ</h2>
+                <h2 className="font-serif text-xl font-bold text-primary-900">
+                  <span className="underline-gold">お知らせ</span>
+                </h2>
                 <button
+                  aria-label="閉じる"
                   onClick={() => setActiveSection(null)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  className="kendo-pill flex h-8 w-8 items-center justify-center text-gray-400 transition-colors hover:bg-gray-100 hover:text-accent-700"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -332,13 +343,13 @@ export default function Home() {
                     transition={{ delay: index * 0.05 }}
                   >
                     <Link href={`/news/${news.id}`}>
-                      <div className="group mb-3 rounded-xl border border-gray-100 bg-white p-4 transition-all hover:border-accent-200 hover:shadow-md">
+                      <div className="card-accent-bar group mb-3 border border-gray-100 bg-white p-4 pl-5 transition-all hover:border-accent-200 hover:shadow-md">
                         <div className="mb-2 flex items-center gap-2">
-                          <span className="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
+                          <span className="bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">
                             {news.category}
                           </span>
                           {news.isPinned && (
-                            <span className="rounded-full bg-gold-50 px-2 py-0.5 text-xs font-medium text-gold-700">
+                            <span className="bg-gold-50 px-2 py-0.5 text-xs font-medium text-gold-700">
                               重要
                             </span>
                           )}
@@ -346,7 +357,7 @@ export default function Home() {
                             {new Date(news.publishedAt || news.createdAt).toLocaleDateString("ja-JP")}
                           </span>
                         </div>
-                        <h3 className="font-medium text-gray-900 transition-colors group-hover:text-accent-600">
+                        <h3 className="font-medium text-primary-900 transition-colors group-hover:text-accent-700">
                           {news.title}
                         </h3>
                         {news.excerpt && (

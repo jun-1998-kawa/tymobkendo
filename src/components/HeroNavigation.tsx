@@ -29,8 +29,7 @@ export default function HeroNavigation() {
               onClick={() => scrollToSection(item.targetId)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-2 text-sm font-medium text-white transition-all duration-300 hover:bg-white/20 hover:backdrop-blur-sm"
-              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.8)' }}
+              className="text-shadow-hero-nav px-6 py-2 font-serif text-sm font-medium tracking-wide text-white transition-all duration-300 hover:bg-white/20 hover:backdrop-blur-sm"
             >
               {item.label}
             </motion.button>

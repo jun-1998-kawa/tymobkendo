@@ -204,13 +204,16 @@ export default function AppDashboard() {
 
       {/* Welcome Section */}
       <FadeIn>
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary-800 via-primary-900 to-black p-6 text-white shadow-xl md:p-8">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary-800 via-primary-900 to-black p-6 text-white shadow-xl md:p-8">
+          {/* signature 朱→金 上端アクセント */}
+          <div className="absolute left-0 right-0 top-0 h-[3px] bg-gradient-to-r from-accent-500 via-accent-700 to-gold-500" />
+
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-sm font-medium text-gold-400">{getGreeting()}</p>
-              <h1 className="mt-1 text-2xl font-bold md:text-3xl">
+              <p className="text-sm font-medium tracking-wide text-gold-400">{getGreeting()}</p>
+              <h1 className="mt-1 font-serif text-2xl font-bold md:text-3xl">
                 {loading ? (
-                  <span className="inline-block h-8 w-32 animate-pulse rounded bg-white/20" />
+                  <span className="inline-block h-8 w-32 animate-pulse bg-white/20" />
                 ) : (
                   <>{userName}さん</>
                 )}
@@ -222,7 +225,7 @@ export default function AppDashboard() {
               )}
             </div>
             <div className="text-right">
-              <p className="text-xs text-gray-400">戸山高校剣道部</p>
+              <p className="text-xs tracking-wide text-gray-400">戸山高校剣道部</p>
               <p className="font-serif text-lg font-bold text-gold-400">OB会</p>
             </div>
           </div>

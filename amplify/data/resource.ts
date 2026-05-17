@@ -47,7 +47,8 @@ const schema = a.schema({
       threadId: a.id().required(),
       body: a.string().required(),
       imagePaths: a.string().array(),
-      authorId: a.string(), // 投稿者のUser ID（画像パス用）
+      author: a.string(), // 投稿者の表示名（Cognito の姓名キャッシュ）
+      authorId: a.string(), // 投稿者のUser ID（画像パス・権限判定用）
       isHidden: a.boolean().default(false),
     })
     .authorization((allow) => [

@@ -196,35 +196,5 @@ export async function getImageUrls(
   return urls.filter((url): url is string => url !== null);
 }
 
-/**
- * 画像URLを取得するフック
- *
- * @example
- * ```tsx
- * const { urls, loading } = useImageUrls(tweet.imagePaths, "members", tweet.authorId);
- * ```
- */
-export function useImageUrls(
-  paths: string[] | null | undefined,
-  basePath: "members" | "public",
-  userId?: string,
-  category?: string
-) {
-  const [urls, setUrls] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // pathsが変更されたときにURLを取得
-  useState(() => {
-    if (!paths || paths.length === 0) {
-      setUrls([]);
-      return;
-    }
-
-    setLoading(true);
-    getImageUrls(paths, basePath, userId, category)
-      .then(setUrls)
-      .finally(() => setLoading(false));
-  });
-
-  return { urls, loading };
-}
+// 旧 useImageUrls フックは useState を副作用として誤用していたため削除。
+// 画像 URL は各画面の useEffect 内で getImageUrls() を直接呼んでください。

@@ -221,7 +221,23 @@ export default function SiteConfigPage() {
           footerCopyright,
         });
       } else {
-        // Create new
+        // SiteConfig は実質シングルトン。多重アクティブを防ぐため、
+        // create 直前に既存の isActive=true レコードを全て無効化する。
+        try {
+          const { data: existing } = await models.SiteConfig.list({
+            filter: { isActive: { eq: true } },
+          });
+          if (existing && existing.length > 0) {
+            await Promise.allSettled(
+              existing.map((c: SiteConfig) =>
+                models.SiteConfig.update({ id: c.id, isActive: false })
+              )
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to deactivate existing site configs:", e);
+        }
+
         await models.SiteConfig.create({
           heroTitle,
           heroSubtitle,

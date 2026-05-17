@@ -109,7 +109,7 @@ export default function AppDashboard() {
               if (firstSlide.mediaPath && firstSlide.mediaType !== 'video') {
                 const url = await getUrl({
                   path: `public/${firstSlide.mediaPath}`,
-                  options: { validateObjectExistence: false, expiresIn: 3600 }
+                  options: { validateObjectExistence: false, expiresIn: 86400 }
                 });
                 setBackgroundImage(url.url.toString());
               }
@@ -118,14 +118,14 @@ export default function AppDashboard() {
             // heroImagePathsを使用している場合
             const url = await getUrl({
               path: `public/${config.heroImagePaths[0]}`,
-              options: { validateObjectExistence: false, expiresIn: 3600 }
+              options: { validateObjectExistence: false, expiresIn: 86400 }
             });
             setBackgroundImage(url.url.toString());
           } else if (config?.heroImagePath) {
             // 単一のheroImagePathを使用している場合
             const url = await getUrl({
               path: `public/${config.heroImagePath}`,
-              options: { validateObjectExistence: false, expiresIn: 3600 }
+              options: { validateObjectExistence: false, expiresIn: 86400 }
             });
             setBackgroundImage(url.url.toString());
           }

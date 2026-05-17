@@ -8,7 +8,10 @@ import Home from '../page';
 jest.mock('aws-amplify/data');
 jest.mock('aws-amplify/storage');
 
-const mockGenerateClient = generateClient as jest.MockedFunction<typeof generateClient>;
+// `typeof generateClient` is a deeply-nested generic that pushes the type
+// checker past its recursion limit. We only need the .mockReturnValue surface
+// here, so a loose Jest mock type is enough.
+const mockGenerateClient = generateClient as unknown as jest.Mock;
 const mockGetUrl = getUrl as jest.MockedFunction<typeof getUrl>;
 
 describe('Home Page', () => {

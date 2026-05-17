@@ -298,7 +298,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
               >
                 {item.label}
                 {isActive(item.href) && (
-                  <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-gradient-to-r from-accent-500 to-gold-500" />
+                  <span className="kendo-pill absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-gradient-to-r from-accent-500 to-gold-500" />
                 )}
               </Link>
             ))}
@@ -308,7 +308,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
           <div className="flex items-center gap-3">
             {/* User Avatar */}
             <div className="hidden items-center gap-2 md:flex">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-accent-500 to-gold-500 text-sm font-bold text-white shadow-sm">
+              <div className="kendo-pill flex h-8 w-8 items-center justify-center bg-gradient-to-br from-accent-500 to-gold-500 text-sm font-bold text-white shadow-sm">
                 {getInitials(userEmail)}
               </div>
               <div className="text-right">
@@ -317,7 +317,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
             </div>
             <button
               onClick={signOut}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition-all duration-200 hover:border-accent-300 hover:bg-accent-50 hover:text-accent-700"
+              className="border border-gray-200 bg-white px-3 py-1.5 font-serif text-xs font-medium text-gray-600 transition-all duration-200 hover:border-accent-300 hover:bg-accent-50 hover:text-accent-700"
             >
               ログアウト
             </button>
@@ -340,7 +340,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
             <NavIcon name={item.icon} active={isActive(item.href)} />
             <span>{item.label}</span>
             {isActive(item.href) && (
-              <span className="absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-gradient-to-r from-accent-500 to-gold-500" />
+              <span className="kendo-pill absolute top-0 left-1/2 h-0.5 w-8 -translate-x-1/2 bg-gradient-to-r from-accent-500 to-gold-500" />
             )}
           </Link>
         ))}

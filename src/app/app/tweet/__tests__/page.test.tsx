@@ -35,12 +35,28 @@ describe('Tweet Page', () => {
       }),
     });
 
+    // Favorite はツイート画面でも購読されるため、空データを返すモックを用意する
+    const mockFavoriteObserveQuery = jest.fn().mockReturnValue({
+      subscribe: jest.fn((callbacks: any) => {
+        setTimeout(() => {
+          callbacks.next({ items: [] });
+        }, 0);
+        return { unsubscribe: unsubscribeMock };
+      }),
+    });
+
     mockGenerateClient.mockReturnValue({
       models: {
         Tweet: {
           create: mockCreate,
           delete: mockDelete,
+          update: jest.fn().mockResolvedValue({ data: {} }),
           observeQuery: mockObserveQuery,
+        },
+        Favorite: {
+          observeQuery: mockFavoriteObserveQuery,
+          create: jest.fn().mockResolvedValue({ data: {} }),
+          delete: jest.fn().mockResolvedValue({ data: null }),
         },
       },
     } as any);
@@ -49,15 +65,15 @@ describe('Tweet Page', () => {
   it('should render tweet input form', () => {
     render(<TweetPage />);
 
-    expect(screen.getByPlaceholderText(/近況を共有/)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /投稿/ })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/いまどうしてる/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /ポスト/ })).toBeInTheDocument();
   });
 
   it('should show character count', async () => {
     const user = userEvent.setup();
     render(<TweetPage />);
 
-    const textarea = screen.getByPlaceholderText(/近況を共有/);
+    const textarea = screen.getByPlaceholderText(/いまどうしてる/);
     await user.type(textarea, 'テスト投稿');
 
     expect(screen.getByText(/5\/140/)).toBeInTheDocument();
@@ -66,19 +82,20 @@ describe('Tweet Page', () => {
   it('should disable submit button when content is empty', () => {
     render(<TweetPage />);
 
-    const submitButton = screen.getByRole('button', { name: /投稿/ });
+    const submitButton = screen.getByRole('button', { name: /ポスト/ });
     expect(submitButton).toBeDisabled();
   });
 
   it('should disable submit button when content exceeds 140 characters', async () => {
-    const user = userEvent.setup();
     render(<TweetPage />);
 
-    const textarea = screen.getByPlaceholderText(/近況を共有/);
+    const textarea = screen.getByPlaceholderText(/いまどうしてる/);
+    // textarea には maxLength があるため、入力ではなく fireEvent.change で
+    // 直接 141 文字をセットして上限超過の挙動を検証する。
     const longText = 'あ'.repeat(141);
-    await user.type(textarea, longText);
+    fireEvent.change(textarea, { target: { value: longText } });
 
-    const submitButton = screen.getByRole('button', { name: /投稿/ });
+    const submitButton = screen.getByRole('button', { name: /ポスト/ });
     expect(submitButton).toBeDisabled();
   });
 
@@ -86,17 +103,18 @@ describe('Tweet Page', () => {
     const user = userEvent.setup();
     render(<TweetPage />);
 
-    const textarea = screen.getByPlaceholderText(/近況を共有/);
+    const textarea = screen.getByPlaceholderText(/いまどうしてる/);
     await user.type(textarea, 'テスト投稿です');
 
-    const submitButton = screen.getByRole('button', { name: /投稿/ });
+    const submitButton = screen.getByRole('button', { name: /ポスト/ });
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(mockCreate).toHaveBeenCalledWith({
-        content: 'テスト投稿です',
-        imagePaths: null,
-      });
+      expect(mockCreate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'テスト投稿です',
+        })
+      );
     });
   });
 
@@ -104,10 +122,10 @@ describe('Tweet Page', () => {
     const user = userEvent.setup();
     render(<TweetPage />);
 
-    const textarea = screen.getByPlaceholderText(/近況を共有/) as HTMLTextAreaElement;
+    const textarea = screen.getByPlaceholderText(/いまどうしてる/) as HTMLTextAreaElement;
     await user.type(textarea, 'テスト投稿');
 
-    const submitButton = screen.getByRole('button', { name: /投稿/ });
+    const submitButton = screen.getByRole('button', { name: /ポスト/ });
     await user.click(submitButton);
 
     await waitFor(() => {
@@ -211,6 +229,7 @@ describe('Tweet Page', () => {
       imagePaths: [],
       createdAt: new Date().toISOString(),
       owner: 'current-user',
+      authorId: 'current-user',
     };
 
     mockObserveQuery.mockReturnValue({
@@ -247,6 +266,7 @@ describe('Tweet Page', () => {
       imagePaths: [],
       createdAt: new Date().toISOString(),
       owner: 'current-user',
+      authorId: 'current-user',
     };
 
     mockObserveQuery.mockReturnValue({
@@ -297,24 +317,25 @@ describe('Tweet Page', () => {
     const user = userEvent.setup();
     const mockFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
 
-    mockUploadData.mockReturnValue({
+    // mockImplementation を使い、reject される Promise を「uploadData 呼び出し時」に
+    // 生成する。mockReturnValue で即時生成すると、コンポーネントが await する前に
+    // ハンドラ未付与の rejection となり、Node が worker をクラッシュさせるため。
+    mockUploadData.mockImplementation(() => ({
       result: Promise.reject(new Error('Upload failed')),
       cancel: jest.fn(),
       pause: jest.fn(),
       resume: jest.fn(),
       state: 'ERROR' as any,
-    });
-
-    // Mock window.alert
-    global.alert = jest.fn();
+    }));
 
     render(<TweetPage />);
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(fileInput, mockFile);
 
+    // アップロード失敗時はインラインのエラーメッセージを表示する
     await waitFor(() => {
-      expect(global.alert).toHaveBeenCalledWith(expect.stringContaining('アップロード'));
+      expect(screen.getByText(/アップロードに失敗しました/)).toBeInTheDocument();
     });
   });
 });

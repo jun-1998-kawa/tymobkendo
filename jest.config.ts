@@ -8,6 +8,9 @@ const config: Config = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^.+\\.(css|scss|sass)$': 'identity-obj-proxy',
+    // amplify_outputs.json はデプロイ時に自動生成され、テスト環境には存在しない
+    // ため、空のモックに差し替える（Amplify.configure はモック済み）。
+    'amplify_outputs\\.json$': '<rootDir>/src/test-utils/amplifyOutputsMock.json',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

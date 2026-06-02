@@ -17,6 +17,23 @@ jest.mock('aws-amplify/storage', () => ({
   remove: jest.fn(),
 }));
 
+// 認証系はテストでは固定のユーザーを返すモックにする
+jest.mock('aws-amplify/auth', () => ({
+  getCurrentUser: jest.fn().mockResolvedValue({
+    userId: 'current-user',
+    username: 'current-user',
+  }),
+  fetchUserAttributes: jest.fn().mockResolvedValue({
+    family_name: '山田',
+    given_name: '太郎',
+  }),
+  fetchAuthSession: jest.fn().mockResolvedValue({
+    tokens: { accessToken: { payload: { 'cognito:groups': [] } } },
+  }),
+  signUp: jest.fn(),
+  signOut: jest.fn(),
+}));
+
 jest.mock('aws-amplify', () => ({
   Amplify: {
     configure: jest.fn(),
@@ -24,14 +41,14 @@ jest.mock('aws-amplify', () => ({
 }));
 
 // Mock framer-motion
+// motion.<tag> は対応するDOMタグ名を返す（motion.main / motion.span などにも対応）
 jest.mock('framer-motion', () => ({
-  motion: {
-    div: 'div',
-    section: 'section',
-    article: 'article',
-    tr: 'tr',
-    button: 'button',
-  },
+  motion: new Proxy(
+    {},
+    {
+      get: (_target, prop) => (typeof prop === 'string' ? prop : 'div'),
+    }
+  ),
   AnimatePresence: ({ children }: { children: React.ReactNode }) => children,
 }));
 
@@ -62,6 +79,18 @@ jest.mock('@/components/ui/HeroSlideshow', () => ({
 jest.mock('@/components/NewsSection', () => ({
   __esModule: true,
   default: () => <div data-testid="news-section">News Section</div>,
+}));
+
+// スプラッシュ（ShinaiSlash）はテストでは即座に完了させ、ローディング表示として
+// .animate-spin を持つ要素を描画する。
+jest.mock('@/components/ShinaiSlash', () => ({
+  __esModule: true,
+  default: ({ onComplete }: { onComplete?: () => void }) => {
+    React.useEffect(() => {
+      onComplete?.();
+    }, [onComplete]);
+    return <div className="animate-spin" data-testid="splash" />;
+  },
 }));
 
 jest.mock('@/components/ui/FadeIn', () => ({

@@ -142,7 +142,8 @@ describe('History Management Page', () => {
     render(<HistoryManagementPage />);
 
     await waitFor(() => {
-      const years = screen.getAllByText(/\d{4}年/);
+      // 「YYYY年」だけにマッチさせる（作成日時の「YYYY年M月D日」を除外）
+      const years = screen.getAllByText(/^\d{4}年$/);
       expect(years[0]).toHaveTextContent('2024年');
       expect(years[1]).toHaveTextContent('2020年');
     });
@@ -254,6 +255,8 @@ describe('History Management Page', () => {
     });
 
     const yearInput = screen.getByPlaceholderText('2023');
+    // 年度は初期値（現在年）が入っているためクリアしてから入力する
+    await user.clear(yearInput);
     await user.type(yearInput, '2024');
 
     const titleInput = screen.getByPlaceholderText(/例：全国大会出場/);
@@ -262,7 +265,8 @@ describe('History Management Page', () => {
     const bodyTextarea = screen.getByPlaceholderText(/歴史エントリーの内容/);
     await user.type(bodyTextarea, '本文内容');
 
-    const submitButton = screen.getByRole('button', { name: /作成/ });
+    // ヘッダーの「新規作成」と区別するため厳密一致で送信ボタンを取得
+    const submitButton = screen.getByRole('button', { name: '作成' });
     await user.click(submitButton);
 
     await waitFor(() => {

@@ -7,6 +7,7 @@ import { fetchUserAttributes, getCurrentUser } from "aws-amplify/auth";
 import { getUrl } from "aws-amplify/storage";
 import { models } from "@/lib/amplifyClient";
 import type { SiteConfig, HeroSlide, News } from "@/lib/amplifyClient";
+import { useTabVisibility } from "@/hooks/useTabVisibility";
 import FadeIn from "@/components/ui/FadeIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 
@@ -27,6 +28,7 @@ export default function AppDashboard() {
   const [loading, setLoading] = useState(true);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
   const [newsList, setNewsList] = useState<News[]>([]);
+  const { showTweet, showFavorites, showBoard } = useTabVisibility();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -142,8 +144,9 @@ export default function AppDashboard() {
     fetchData();
   }, []);
 
+  // 管理画面（サイト設定）で非表示にされた機能はメニューからも除外する
   const quickLinks = [
-    {
+    showTweet && {
       href: "/app/tweet",
       title: "近況投稿",
       description: "140文字で近況をシェア",
@@ -151,7 +154,7 @@ export default function AppDashboard() {
       stat: `${stats.tweetCount}件の投稿`,
       color: "from-accent-500 to-accent-600",
     },
-    {
+    showBoard && {
       href: "/app/board",
       title: "掲示板",
       description: "スレッド形式で議論",
@@ -167,7 +170,7 @@ export default function AppDashboard() {
       stat: "1923年〜",
       color: "from-primary-700 to-primary-800",
     },
-    {
+    showFavorites && {
       href: "/app/favorites",
       title: "お気に入り",
       description: "保存した投稿を確認",
@@ -175,7 +178,14 @@ export default function AppDashboard() {
       stat: `${stats.favoriteCount}件保存`,
       color: "from-amber-500 to-orange-500",
     },
-  ];
+  ].filter(Boolean) as {
+    href: string;
+    title: string;
+    description: string;
+    icon: string;
+    stat: string;
+    color: string;
+  }[];
 
   // 時間帯に応じた挨拶
   const getGreeting = () => {

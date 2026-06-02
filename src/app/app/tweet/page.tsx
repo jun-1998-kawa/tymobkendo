@@ -16,6 +16,7 @@ export default function TweetPage() {
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [currentUserName, setCurrentUserName] = useState<string>("");
   const [replyTo, setReplyTo] = useState<Tweet | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     // 現在のユーザー情報を取得
@@ -45,6 +46,7 @@ export default function TweetPage() {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setTweets(sorted);
+        setInitialLoading(false);
       },
     });
 
@@ -137,13 +139,20 @@ export default function TweetPage() {
 
       {/* Tweet List */}
       <div className="bg-white">
-        <TweetList
-          tweets={tweets}
-          currentUserId={currentUserId}
-          favorites={favorites}
-          onDelete={handleDelete}
-          onReply={handleReply}
-        />
+        {initialLoading ? (
+          <div className="flex flex-col items-center justify-center p-12 text-center">
+            <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-accent-500 border-t-transparent" />
+            <p className="text-sm text-gray-500">読み込み中...</p>
+          </div>
+        ) : (
+          <TweetList
+            tweets={tweets}
+            currentUserId={currentUserId}
+            favorites={favorites}
+            onDelete={handleDelete}
+            onReply={handleReply}
+          />
+        )}
       </div>
     </div>
   );

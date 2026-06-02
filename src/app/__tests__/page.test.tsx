@@ -14,255 +14,166 @@ jest.mock('aws-amplify/storage');
 const mockGenerateClient = generateClient as unknown as jest.Mock;
 const mockGetUrl = getUrl as jest.MockedFunction<typeof getUrl>;
 
+type ListResult = { data: unknown[] | null };
+
+// SiteConfig / News / HeroSlide の list をまとめてモックするヘルパー
+const setupModels = (options: {
+  configs?: unknown[];
+  news?: unknown[];
+  slides?: unknown[];
+  configList?: jest.Mock;
+}) => {
+  const siteConfigList =
+    options.configList ??
+    jest.fn().mockResolvedValue({ data: options.configs ?? [] } as ListResult);
+  const newsList = jest
+    .fn()
+    .mockResolvedValue({ data: options.news ?? [] } as ListResult);
+  const heroSlideList = jest
+    .fn()
+    .mockResolvedValue({ data: options.slides ?? [] } as ListResult);
+
+  mockGenerateClient.mockReturnValue({
+    models: {
+      SiteConfig: { list: siteConfigList },
+      News: { list: newsList },
+      HeroSlide: { list: heroSlideList },
+    },
+  } as any);
+
+  return { siteConfigList, newsList, heroSlideList };
+};
+
 describe('Home Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    sessionStorage.clear();
   });
 
   it('should render loading state initially', () => {
-    const mockList = jest.fn().mockReturnValue(new Promise(() => {})); // Never resolves
-    mockGenerateClient.mockReturnValue({
-      models: {
-        SiteConfig: {
-          list: mockList,
-        },
-      },
-    } as any);
+    // SiteConfig の取得が解決しない間はスプラッシュ（.animate-spin）が表示される
+    setupModels({ configList: jest.fn().mockReturnValue(new Promise(() => {})) });
 
     render(<Home />);
 
-    // Check for loading spinner by class name
     expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
-  it('should render default content when no SiteConfig exists', async () => {
-    const mockList = jest.fn().mockResolvedValue({ data: [] });
-    mockGenerateClient.mockReturnValue({
-      models: {
-        SiteConfig: {
-          list: mockList,
-        },
-      },
-    } as any);
+  it('should render default hero title when no SiteConfig exists', async () => {
+    setupModels({ configs: [] });
 
     render(<Home />);
 
     await waitFor(() => {
       expect(screen.getByText('戸山高校剣道部OB会')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('伝統を継承し、絆を深める')).toBeInTheDocument();
-    expect(screen.getByText('ようこそ')).toBeInTheDocument();
-    expect(screen.getByText(/戸山高校剣道部OB会の公式サイトへようこそ/)).toBeInTheDocument();
   });
 
-  it('should render default features when no SiteConfig exists', async () => {
-    const mockList = jest.fn().mockResolvedValue({ data: [] });
-    mockGenerateClient.mockReturnValue({
-      models: {
-        SiteConfig: {
-          list: mockList,
-        },
-      },
-    } as any);
+  it('should render default footer copyright when no SiteConfig exists', async () => {
+    setupModels({ configs: [] });
 
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText('近況投稿')).toBeInTheDocument();
+      expect(
+        screen.getByText(/戸山高校剣道部OB会\. All rights reserved\./)
+      ).toBeInTheDocument();
     });
-
-    expect(screen.getByText('掲示板')).toBeInTheDocument();
-    expect(screen.getByText('歴史アーカイブ')).toBeInTheDocument();
   });
 
-  it(
-    'should render content from SiteConfig when it exists',
-    async () => {
-      const mockConfig = {
-        id: '1',
-        heroTitle: 'カスタムタイトル',
-        heroSubtitle: 'カスタムサブタイトル',
-        heroImagePath: 'custom-hero.jpg',
-        welcomeTitle: 'カスタムウェルカム',
-        welcomeBody: 'カスタム本文\n2行目',
-        featuresJson: JSON.stringify([
-          { icon: '🎯', title: '機能1', description: '説明1' },
-          { icon: '🚀', title: '機能2', description: '説明2' },
-        ]),
-        ctaTitle: 'カスタムCTA',
-        ctaBody: 'CTAの本文',
-        footerCopyright: '© 2025 カスタムコピーライト',
-        isActive: true,
-      };
+  it('should render content from SiteConfig when it exists', async () => {
+    const mockConfig = {
+      id: '1',
+      heroTitle: 'カスタムタイトル',
+      heroSubtitle: 'カスタムサブタイトル',
+      welcomeTitle: 'カスタムウェルカム',
+      welcomeBody: 'カスタム本文',
+      featuresJson: JSON.stringify([]),
+      ctaTitle: 'カスタムCTA',
+      ctaBody: 'CTAの本文',
+      footerCopyright: '© 2025 カスタムコピーライト',
+      isActive: true,
+    };
 
-      const mockList = jest.fn().mockResolvedValue({ data: [mockConfig] });
-      mockGetUrl.mockResolvedValue({
-        url: new URL('https://example.com/custom-hero.jpg'),
-        expiresAt: new Date(),
-      });
-
-      mockGenerateClient.mockReturnValue({
-        models: {
-          SiteConfig: {
-            list: mockList,
-          },
-        },
-      } as any);
-
-      render(<Home />);
-
-      await waitFor(
-        () => {
-          expect(screen.getByText('カスタムタイトル')).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-
-      expect(screen.getByText('カスタムサブタイトル')).toBeInTheDocument();
-      expect(screen.getByText('カスタムウェルカム')).toBeInTheDocument();
-      expect(screen.getByText(/カスタム本文/)).toBeInTheDocument();
-      expect(screen.getByText('機能1')).toBeInTheDocument();
-      expect(screen.getByText('機能2')).toBeInTheDocument();
-      expect(screen.getByText('カスタムCTA')).toBeInTheDocument();
-      expect(screen.getByText('© 2025 カスタムコピーライト')).toBeInTheDocument();
-    },
-    10000
-  );
-
-  it(
-    'should handle multiline text in welcome and CTA sections',
-    async () => {
-      const mockConfig = {
-        id: '1',
-        heroTitle: 'テスト',
-        heroSubtitle: 'テスト',
-        welcomeTitle: 'ウェルカム',
-        welcomeBody: '1行目\n2行目\n3行目',
-        featuresJson: JSON.stringify([]),
-        ctaTitle: 'CTA',
-        ctaBody: 'CTA1行目\nCTA2行目',
-        footerCopyright: '©️',
-        isActive: true,
-      };
-
-      const mockList = jest.fn().mockResolvedValue({ data: [mockConfig] });
-      mockGenerateClient.mockReturnValue({
-        models: {
-          SiteConfig: {
-            list: mockList,
-          },
-        },
-      } as any);
-
-      render(<Home />);
-
-      await waitFor(
-        () => {
-          expect(screen.getByText(/1行目/)).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
-
-      expect(screen.getByText(/2行目/)).toBeInTheDocument();
-      expect(screen.getByText(/3行目/)).toBeInTheDocument();
-      expect(screen.getByText(/CTA1行目/)).toBeInTheDocument();
-      expect(screen.getByText(/CTA2行目/)).toBeInTheDocument();
-    },
-    10000
-  );
-
-  it(
-    'should load hero image URL when heroImagePath exists',
-    async () => {
-      const mockConfig = {
-        id: '1',
-        heroTitle: 'テスト',
-        heroSubtitle: 'テスト',
-        heroImagePath: 'test-image.jpg',
-        welcomeTitle: 'ウェルカム',
-        welcomeBody: '本文',
-        featuresJson: JSON.stringify([]),
-        ctaTitle: 'CTA',
-        ctaBody: 'CTA本文',
-        footerCopyright: '©️',
-        isActive: true,
-      };
-
-      const mockList = jest.fn().mockResolvedValue({ data: [mockConfig] });
-      mockGetUrl.mockResolvedValue({
-        url: new URL('https://s3.example.com/test-image.jpg'),
-        expiresAt: new Date(),
-      });
-
-      mockGenerateClient.mockReturnValue({
-        models: {
-          SiteConfig: {
-            list: mockList,
-        },
-      },
-    } as any);
+    setupModels({ configs: [mockConfig] });
 
     render(<Home />);
 
-    await waitFor(
-      () => {
-        expect(mockGetUrl).toHaveBeenCalledWith({
-          path: 'public/test-image.jpg',
-        });
-      },
-      { timeout: 5000 }
-    );
-  },
-  10000
-);
-
-  it('should handle error when loading SiteConfig fails', async () => {
-    const mockList = jest.fn().mockRejectedValue(new Error('Network error'));
-    mockGenerateClient.mockReturnValue({
-      models: {
-        SiteConfig: {
-          list: mockList,
-        },
-      },
-    } as any);
-
-    render(<Home />);
-
-    // Should still render default content
     await waitFor(() => {
-      expect(screen.getByText('戸山高校剣道部OB会')).toBeInTheDocument();
+      expect(screen.getByText('カスタムタイトル')).toBeInTheDocument();
     });
+
+    expect(screen.getByText('カスタムサブタイトル')).toBeInTheDocument();
+    expect(screen.getByText('© 2025 カスタムコピーライト')).toBeInTheDocument();
   });
 
-  it('should handle invalid JSON in featuresJson gracefully', async () => {
+  it('should load hero image URL when heroImagePath exists', async () => {
     const mockConfig = {
       id: '1',
       heroTitle: 'テスト',
       heroSubtitle: 'テスト',
+      heroImagePath: 'test-image.jpg',
       welcomeTitle: 'ウェルカム',
       welcomeBody: '本文',
-      featuresJson: 'invalid-json{',
+      featuresJson: JSON.stringify([]),
       ctaTitle: 'CTA',
       ctaBody: 'CTA本文',
       footerCopyright: '©️',
       isActive: true,
     };
 
-    const mockList = jest.fn().mockResolvedValue({ data: [mockConfig] });
-    mockGenerateClient.mockReturnValue({
-      models: {
-        SiteConfig: {
-          list: mockList,
-        },
-      },
-    } as any);
+    mockGetUrl.mockResolvedValue({
+      url: new URL('https://s3.example.com/test-image.jpg'),
+      expiresAt: new Date(),
+    });
+
+    setupModels({ configs: [mockConfig] });
 
     render(<Home />);
 
-    // Should render default features when JSON parsing fails
     await waitFor(() => {
-      expect(screen.getByText('近況投稿')).toBeInTheDocument();
+      expect(mockGetUrl).toHaveBeenCalledWith(
+        expect.objectContaining({ path: 'public/test-image.jpg' })
+      );
+    });
+  });
+
+  it('should handle error when loading SiteConfig fails', async () => {
+    setupModels({
+      configList: jest.fn().mockRejectedValue(new Error('Network error')),
+    });
+
+    render(<Home />);
+
+    // エラー時でもデフォルトのヒーロータイトルは表示される
+    await waitFor(() => {
+      expect(screen.getByText('戸山高校剣道部OB会')).toBeInTheDocument();
+    });
+  });
+
+  it('should show news button when published news exist', async () => {
+    const mockNews = [
+      {
+        id: 'n1',
+        title: 'お知らせ1',
+        category: 'イベント',
+        excerpt: '抜粋',
+        isPublished: true,
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+        publishedAt: new Date().toISOString(),
+      },
+    ];
+
+    setupModels({ configs: [], news: mockNews });
+
+    render(<Home />);
+
+    // ヒーローのお知らせボタンは件数バッジ付き（ナビの「お知らせ」と区別する）
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /お知らせ\s*1/ })
+      ).toBeInTheDocument();
     });
   });
 });

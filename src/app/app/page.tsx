@@ -187,6 +187,33 @@ export default function AppDashboard() {
     color: string;
   }[];
 
+  // クイック統計も、管理画面（サイト設定）で非表示にされた機能は除外する
+  const statCards = [
+    showTweet && {
+      key: "tweet",
+      value: stats.tweetCount,
+      label: "投稿数",
+      valueClass: "text-accent-600",
+    },
+    showBoard && {
+      key: "board",
+      value: stats.threadCount,
+      label: "スレッド",
+      valueClass: "text-gold-600",
+    },
+    showFavorites && {
+      key: "favorites",
+      value: stats.favoriteCount,
+      label: "お気に入り",
+      valueClass: "text-amber-500",
+    },
+  ].filter(Boolean) as {
+    key: string;
+    value: number;
+    label: string;
+    valueClass: string;
+  }[];
+
   // 時間帯に応じた挨拶
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -243,22 +270,18 @@ export default function AppDashboard() {
       </FadeIn>
 
       {/* Quick Stats */}
-      <FadeIn delay={0.1}>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-accent-600">{stats.tweetCount}</p>
-            <p className="text-xs text-gray-500">投稿数</p>
+      {statCards.length > 0 && (
+        <FadeIn delay={0.1}>
+          <div className={`grid gap-3 ${statCards.length === 1 ? "grid-cols-1" : statCards.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+            {statCards.map((card) => (
+              <div key={card.key} className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm">
+                <p className={`text-2xl font-bold ${card.valueClass}`}>{card.value}</p>
+                <p className="text-xs text-gray-500">{card.label}</p>
+              </div>
+            ))}
           </div>
-          <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-gold-600">{stats.threadCount}</p>
-            <p className="text-xs text-gray-500">スレッド</p>
-          </div>
-          <div className="rounded-xl border border-gray-100 bg-white p-4 text-center shadow-sm">
-            <p className="text-2xl font-bold text-amber-500">{stats.favoriteCount}</p>
-            <p className="text-xs text-gray-500">お気に入り</p>
-          </div>
-        </div>
-      </FadeIn>
+        </FadeIn>
+      )}
 
       {/* Quick Links */}
       <div>

@@ -68,6 +68,30 @@ refs:
 - トリガ: EventBridge スケジュール（毎日）。
 - アクション: Lambdaで参照整合性を走査し、期限超過オブジェクトを削除。
 
+8) TDD Orchestrator（テスト駆動の開発フロー統括）
+- 役割: 機能追加/仕様変更/バグ修正を Red→Green→Refactor で進める入口。要件を1振る舞いに分解し、RED を `test-author`、検証を `coverage-guard` に委譲する。
+- トリガ: ローカル開発/実装タスク着手時。
+- アクション:
+  - `claude.md §6` の手順に従いサイクルを駆動（1サイクル=1振る舞い）。
+  - GREEN は最小実装、REFACTOR は緑維持で整理。最後に `typecheck`/`lint` を緑化。
+- 期待効果: テスト未作成の実装を防ぎ、不変条件（140文字・owner/ADMINS・CMS権限・招待コード）を回帰から守る。
+
+9) Test Author（RED 担当）
+- 役割: 実装より先に失敗するテストを書く。テストのみを書き実装はしない。
+- トリガ: TDD Orchestrator からの委譲。
+- アクション:
+  - 対象同階層の `__tests__/` に `*.test.tsx` を作成。`jest.setup.tsx` の共通モックを活用。
+  - RTL（`getByRole`/`findBy*`）でユーザー視点に検証、`observeQuery` は `next({items})` で初期データ供給。
+  - `npm run test -- <path>` で赤と失敗理由（実装不足）を確認して返す。
+
+10) Coverage Guard（検証担当）
+- 役割: 回帰・型・lint・カバレッジを一括検証し、未カバー箇所を指摘。
+- トリガ: GREEN/REFACTOR 後の検証フェーズ。
+- アクション:
+  - `npm run test` / `npm run test:coverage` / `npm run typecheck` / `npm run lint` を実行。
+  - `jest.config.ts` の 70% しきい値を判定。割れた場合は未カバー分岐と「埋めるべき振る舞い」を提示。
+  - しきい値を下げる・除外する・`skip/only` で握りつぶす等の基準緩和は禁止。
+
 
 ## B. 実装ロードマップ（Claude向け）
 

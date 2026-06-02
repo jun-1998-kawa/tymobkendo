@@ -165,6 +165,11 @@ const schema = a.schema({
 
       footerCopyright: a.string().required(),
 
+      // 会員ページのタブ表示制御（管理画面から非表示にできる）
+      showTweet: a.boolean().default(true),       // 近況
+      showFavorites: a.boolean().default(true),   // お気に入り
+      showBoard: a.boolean().default(true),       // 掲示板
+
       isActive: a.boolean().default(true),
     })
     .authorization((allow) => [

@@ -1,12 +1,12 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { uploadData } from "aws-amplify/storage";
 import { motion, AnimatePresence } from "framer-motion";
+import { models as typedModels } from "@/lib/amplifyClient";
 import FadeIn from "@/components/ui/FadeIn";
 
-const client = generateClient();
-const models = client.models as any;
+// 既存実装に合わせて型制約を緩める（遅延解決される共有クライアントを利用）
+const models = typedModels as any;
 
 type News = any;
 

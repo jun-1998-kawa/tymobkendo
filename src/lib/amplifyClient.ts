@@ -3,9 +3,25 @@
  */
 import { generateClient } from "aws-amplify/data";
 
-// Amplifyクライアント（シングルトン）
-export const client = generateClient();
-export const models = client.models as Models;
+// generateClient() はモジュール読み込み時ではなく、最初に利用された時点で
+// 解決する（遅延評価）。本番では従来どおり単一のクライアント挙動を保ちつつ、
+// テストでは generateClient のモックを差し込んだ後にクライアントが生成される
+// ため、モジュール先頭での即時生成による「モック未適用」問題を回避できる。
+export const client: any = new Proxy(
+  {},
+  {
+    get(_target, prop) {
+      return (generateClient() as any)[prop];
+    },
+  }
+);
+
+// models も同様に遅延解決し、アクセスのたびに最新のクライアントから取得する。
+export const models = new Proxy({} as Models, {
+  get(_target, prop) {
+    return (generateClient().models as any)[prop as keyof Models];
+  },
+}) as Models;
 
 // =============================================================================
 // 型定義
@@ -150,6 +166,9 @@ export interface SiteConfig {
   ctaTitle: string;
   ctaBody: string;
   footerCopyright: string;
+  showTweet?: boolean | null;
+  showFavorites?: boolean | null;
+  showBoard?: boolean | null;
   isActive?: boolean | null;
   createdAt: string;
   updatedAt: string;

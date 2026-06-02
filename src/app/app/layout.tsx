@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
+import { useTabVisibility } from "@/hooks/useTabVisibility";
 
 // Authenticator form fields configuration
 const formFields = {
@@ -211,6 +212,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
   const pathname = usePathname();
   const [isAdmin, setIsAdmin] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { showTweet, showFavorites, showBoard } = useTabVisibility();
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -239,11 +241,13 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
   const navItems = useMemo(() => {
     const items = [
       { href: "/app", label: "ホーム", icon: "home" },
-      { href: "/app/tweet", label: "近況", icon: "edit" },
-      { href: "/app/favorites", label: "お気に入り", icon: "heart" },
-      { href: "/app/board", label: "掲示板", icon: "message" },
-      { href: "/app/history", label: "歴史", icon: "book" },
     ];
+
+    // 管理画面（サイト設定）で非表示にされたタブは除外する
+    if (showTweet) items.push({ href: "/app/tweet", label: "近況", icon: "edit" });
+    if (showFavorites) items.push({ href: "/app/favorites", label: "お気に入り", icon: "heart" });
+    if (showBoard) items.push({ href: "/app/board", label: "掲示板", icon: "message" });
+    items.push({ href: "/app/history", label: "歴史", icon: "book" });
 
     // 管理者の場合は管理ページを追加
     if (isAdmin) {
@@ -251,7 +255,7 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
     }
 
     return items;
-  }, [isAdmin]);
+  }, [isAdmin, showTweet, showFavorites, showBoard]);
 
   const isActive = (href: string) => pathname === href || (href === "/admin" && pathname.startsWith("/admin"));
 

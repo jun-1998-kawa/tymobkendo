@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { generateClient } from "aws-amplify/data";
 import { uploadData, getUrl, remove } from "aws-amplify/storage";
+import { models as typedModels } from "@/lib/amplifyClient";
 import FadeIn from "@/components/ui/FadeIn";
 
-const client = generateClient();
-const models = client.models as any;
+// 既存実装に合わせて型制約を緩める（遅延解決される共有クライアントを利用）
+const models = typedModels as any;
 
 type SiteConfig = any;
 type Feature = {
@@ -46,6 +46,11 @@ export default function SiteConfigPage() {
   // Footer
   const [footerCopyright, setFooterCopyright] = useState("");
 
+  // 会員ページのタブ表示制御
+  const [showTweet, setShowTweet] = useState(true);
+  const [showFavorites, setShowFavorites] = useState(true);
+  const [showBoard, setShowBoard] = useState(true);
+
   useEffect(() => {
     loadConfig();
   }, []);
@@ -69,6 +74,10 @@ export default function SiteConfigPage() {
         setCtaTitle(activeConfig.ctaTitle || "");
         setCtaBody(activeConfig.ctaBody || "");
         setFooterCopyright(activeConfig.footerCopyright || "");
+        // null/undefined（未設定）は表示扱い
+        setShowTweet(activeConfig.showTweet !== false);
+        setShowFavorites(activeConfig.showFavorites !== false);
+        setShowBoard(activeConfig.showBoard !== false);
 
         // Parse features
         if (activeConfig.featuresJson) {
@@ -219,6 +228,9 @@ export default function SiteConfigPage() {
           ctaTitle,
           ctaBody,
           footerCopyright,
+          showTweet,
+          showFavorites,
+          showBoard,
         });
       } else {
         // SiteConfig は実質シングルトン。多重アクティブを防ぐため、
@@ -250,6 +262,9 @@ export default function SiteConfigPage() {
           ctaTitle,
           ctaBody,
           footerCopyright,
+          showTweet,
+          showFavorites,
+          showBoard,
           isActive: true,
         });
       }
@@ -582,6 +597,51 @@ export default function SiteConfigPage() {
                 placeholder="ログインして、懐かしい仲間との交流をお楽しみください。"
               />
             </div>
+          </section>
+
+          {/* タブ表示制御 Section */}
+          <section className="space-y-4 border-b border-primary-200 pb-8">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-primary-800">
+                会員ページのタブ表示
+              </h2>
+              <p className="mt-1 text-sm text-primary-600">
+                チェックを外したタブは会員ページのナビゲーション・機能メニューから非表示になります。
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { label: "近況", description: "近況投稿（Tweet）タブ", checked: showTweet, setter: setShowTweet },
+                { label: "お気に入り", description: "お気に入り一覧タブ", checked: showFavorites, setter: setShowFavorites },
+                { label: "掲示板", description: "掲示板（スレッド）タブ", checked: showBoard, setter: setShowBoard },
+              ].map((tab) => (
+                <label
+                  key={tab.label}
+                  className="flex items-start gap-3 cursor-pointer rounded-lg border-2 border-primary-200 bg-primary-50 p-4 transition-colors hover:border-amber-300"
+                >
+                  <input
+                    type="checkbox"
+                    checked={tab.checked}
+                    onChange={(e) => tab.setter(e.target.checked)}
+                    className="mt-1 h-5 w-5 rounded border-primary-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+                  />
+                  <div>
+                    <span className="text-sm font-semibold text-primary-800">
+                      {tab.label}
+                      <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${tab.checked ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-500"}`}>
+                        {tab.checked ? "表示" : "非表示"}
+                      </span>
+                    </span>
+                    <p className="mt-0.5 text-xs text-primary-500">{tab.description}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <p className="text-xs text-primary-500">
+              ※ タブを非表示にしても、各ページのデータ自体は削除されません。再度表示にすればそのまま閲覧できます。
+            </p>
           </section>
 
           {/* Footer Section */}

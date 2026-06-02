@@ -12,6 +12,7 @@ export default function BoardPage() {
   const [threads, setThreads] = useState<BoardThread[]>([]);
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -25,6 +26,7 @@ export default function BoardPage() {
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
         setThreads(sorted);
+        setInitialLoading(false);
       },
     });
     return () => sub.unsubscribe();
@@ -38,7 +40,7 @@ export default function BoardPage() {
     setSuccess(false);
 
     try {
-      await models.BoardThread.create({ title: title.trim() });
+      await models.BoardThread.create({ title: title.trim(), pinned: false });
       setTitle("");
       setSuccess(true);
       setShowForm(false);
@@ -197,7 +199,12 @@ export default function BoardPage() {
 
         {/* Regular Threads */}
         <div>
-          {threads.length === 0 ? (
+          {initialLoading ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <div className="mb-4 h-10 w-10 animate-spin rounded-full border-4 border-accent-500 border-t-transparent" />
+              <p className="text-sm text-gray-500">読み込み中...</p>
+            </div>
+          ) : threads.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center">
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                 <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>

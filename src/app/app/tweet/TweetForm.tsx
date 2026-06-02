@@ -35,7 +35,8 @@ export function TweetForm({
     userId: currentUserId,
     category: "tweet",
     maxFiles: 4,
-    onError: (err) => setError(err.message),
+    // アップロードエラーはフックが返す uploadError（日本語の分かりやすい文言）を
+    // displayError 経由で表示するため、ここでは上書きしない。
   });
 
   const disabled = content.length === 0 || content.length > MAX_CHARACTERS;

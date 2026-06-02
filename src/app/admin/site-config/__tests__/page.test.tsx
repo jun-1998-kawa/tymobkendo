@@ -8,7 +8,9 @@ import SiteConfigPage from '../page';
 jest.mock('aws-amplify/data');
 jest.mock('aws-amplify/storage');
 
-const mockGenerateClient = generateClient as jest.MockedFunction<typeof generateClient>;
+// `typeof generateClient` は深くネストしたジェネリックで型チェッカの再帰上限を
+// 超えるため、.mockReturnValue だけ使えれば十分な緩い Jest mock 型にする。
+const mockGenerateClient = generateClient as unknown as jest.Mock;
 const mockUploadData = uploadData as jest.MockedFunction<typeof uploadData>;
 const mockGetUrl = getUrl as jest.MockedFunction<typeof getUrl>;
 
@@ -68,16 +70,26 @@ describe('SiteConfig Admin Page', () => {
     });
   });
 
+  // 必須項目をすべて入力する（HTML5 のバリデーションで送信がブロックされないようにする）
+  const fillRequiredFields = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.type(screen.getByPlaceholderText('戸山高校剣道部OB会'), '新しいタイトル');
+    await user.type(screen.getByPlaceholderText(/伝統を継承/), 'サブタイトル');
+    await user.type(screen.getByPlaceholderText('ようこそ'), 'ようこそ本文タイトル');
+    await user.type(screen.getByPlaceholderText(/公式サイトへようこそ/), 'ウェルカム本文');
+    await user.type(screen.getByPlaceholderText(/会員の皆様へ/), 'CTAタイトル');
+    await user.type(screen.getByPlaceholderText(/懐かしい仲間/), 'CTA本文');
+    await user.type(screen.getByPlaceholderText(/All rights reserved/), '© 2024 テスト');
+  };
+
   it('should create new config when none exists', async () => {
     const user = userEvent.setup();
     render(<SiteConfigPage />);
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/タイトル/)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('戸山高校剣道部OB会')).toBeInTheDocument();
     });
 
-    const heroTitleInput = screen.getByPlaceholderText(/戸山高校剣道部OB会/);
-    await user.type(heroTitleInput, '新しいタイトル');
+    await fillRequiredFields(user);
 
     const submitButton = screen.getByRole('button', { name: /設定を作成/ });
     await user.click(submitButton);
@@ -153,9 +165,7 @@ describe('SiteConfig Admin Page', () => {
       expect(screen.getByText(/サイト設定/)).toBeInTheDocument();
     });
 
-    const fileInput = screen.getAllByRole('button', { name: /ファイルを選択/ })[0]
-      .closest('div')
-      ?.querySelector('input[type="file"]') as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
 
     await user.upload(fileInput, mockFile);
 
@@ -219,11 +229,10 @@ describe('SiteConfig Admin Page', () => {
     render(<SiteConfigPage />);
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/戸山高校剣道部OB会/)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText('戸山高校剣道部OB会')).toBeInTheDocument();
     });
 
-    const heroTitleInput = screen.getByPlaceholderText(/戸山高校剣道部OB会/);
-    await user.type(heroTitleInput, 'テスト');
+    await fillRequiredFields(user);
 
     const submitButton = screen.getByRole('button', { name: /設定を作成/ });
     await user.click(submitButton);

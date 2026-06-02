@@ -100,100 +100,82 @@ function AdminGuard({ signOut, user, children }: any) {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-primary-50 via-white to-gold-50">
-      <AdminHeader signOut={signOut} userEmail={user?.signInDetails?.loginId} />
+      <AdminHeader signOut={signOut} />
       <main className="flex-1 px-4 py-8 md:px-8">{children}</main>
       <AdminFooter />
     </div>
   );
 }
 
-function AdminHeader({ signOut, userEmail }: { signOut?: () => void; userEmail?: string }) {
+function AdminHeader({ signOut }: { signOut?: () => void }) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: "/admin", label: "ダッシュボード", icon: "🏠" },
-    { href: "/admin/hero-slides", label: "スライド管理", icon: "🖼️" },
-    { href: "/admin/site-config", label: "サイト設定", icon: "⚙️" },
-    { href: "/admin/news", label: "ニュース管理", icon: "📰" },
-    { href: "/admin/pages", label: "ページ管理", icon: "📄" },
-    { href: "/admin/history", label: "歴史管理", icon: "📜" },
+    { href: "/admin", label: "ホーム" },
+    { href: "/admin/news", label: "ニュース" },
+    { href: "/admin/site-config", label: "サイト設定" },
+    { href: "/admin/hero-slides", label: "スライド" },
+    { href: "/admin/history", label: "歴史" },
+    { href: "/admin/invite-codes", label: "招待コード" },
   ];
 
   const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-accent-300 bg-white shadow-lg">
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo/Title */}
-          <Link
-            href="/admin"
-            className="flex items-center gap-2 transition-opacity hover:opacity-80"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-red-600 to-amber-600 text-xl font-bold text-white shadow-md">
-              管
-            </div>
-            <div>
-              <h1 className="font-serif text-lg font-bold text-primary-800">
-                管理画面
-              </h1>
-              <p className="text-xs text-red-600">ADMINS ONLY</p>
-            </div>
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-14 items-center justify-between">
+          <Link href="/admin" className="font-serif text-base font-bold text-gray-900">
+            管理画面
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden items-center gap-1 md:flex">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-all duration-200 ${
+                className={`relative px-3 py-2 text-sm font-medium transition-colors ${
                   isActive(item.href)
-                    ? "bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md"
-                    : "text-primary-700 hover:bg-primary-100"
+                    ? "text-accent-700"
+                    : "text-gray-600 hover:text-gray-900"
                 }`}
               >
-                <span>{item.icon}</span>
-                <span className="font-medium">{item.label}</span>
+                {item.label}
+                {isActive(item.href) && (
+                  <span className="absolute bottom-0 left-1/2 h-0.5 w-full -translate-x-1/2 bg-gradient-to-r from-accent-500 to-gold-500" />
+                )}
               </Link>
             ))}
           </nav>
 
-          {/* User Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="hidden rounded-lg border border-primary-300 bg-white px-4 py-2 text-sm font-semibold text-primary-700 transition-all hover:bg-primary-100 md:block"
+              className="hidden text-sm text-gray-500 hover:text-gray-900 md:block"
             >
-              公開ページへ
+              公開ページ
             </Link>
-            <div className="hidden text-right md:block">
-              <p className="text-sm font-medium text-primary-800">{userEmail}</p>
-              <p className="text-xs font-bold text-red-600">管理者</p>
-            </div>
             <button
               onClick={signOut}
-              className="rounded-lg border-2 border-red-600 bg-white px-4 py-2 font-semibold text-red-600 transition-all duration-200 hover:bg-red-600 hover:text-white"
+              className="border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-colors hover:border-accent-300 hover:text-accent-700"
             >
               ログアウト
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <nav className="mt-4 flex gap-2 overflow-x-auto md:hidden">
+        <nav className="flex gap-1 overflow-x-auto pb-2 md:hidden">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm transition-all duration-200 ${
+              className={`shrink-0 px-3 py-1.5 text-sm font-medium transition-colors ${
                 isActive(item.href)
-                  ? "bg-gradient-to-r from-red-600 to-amber-600 text-white shadow-md"
-                  : "bg-primary-100 text-primary-700 hover:bg-primary-200"
+                  ? "border-b-2 border-accent-500 text-accent-700"
+                  : "text-gray-600"
               }`}
             >
-              <span>{item.icon}</span>
-              <span className="font-medium">{item.label}</span>
+              {item.label}
             </Link>
           ))}
         </nav>
@@ -204,10 +186,8 @@ function AdminHeader({ signOut, userEmail }: { signOut?: () => void; userEmail?:
 
 function AdminFooter() {
   return (
-    <footer className="border-t border-primary-200 bg-white px-4 py-6 text-center">
-      <p className="text-sm text-primary-500">
-        管理画面 - 戸山高校剣道部OB会
-      </p>
+    <footer className="border-t border-gray-100 bg-white px-4 py-4 text-center">
+      <p className="text-xs text-gray-400">管理画面 - 戸山高校剣道部OB会</p>
     </footer>
   );
 }

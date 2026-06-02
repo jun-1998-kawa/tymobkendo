@@ -31,9 +31,45 @@ export default function AppDashboard() {
   const { showTweet, showFavorites, showBoard } = useTabVisibility();
 
   useEffect(() => {
+    const loadBackgroundImage = async (): Promise<string | null> => {
+      const siteConfigResult = await models.SiteConfig.list({
+        filter: { isActive: { eq: true } },
+        limit: 1,
+      });
+      const config = siteConfigResult.data?.[0] as SiteConfig | undefined;
+      if (config?.useHeroSlides) {
+        const heroSlidesResult = await models.HeroSlide.list({
+          filter: { isActive: { eq: true } },
+        });
+        const slides = heroSlidesResult.data as HeroSlide[] | null;
+        if (slides && slides.length > 0) {
+          const firstSlide = [...slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))[0];
+          if (firstSlide.mediaPath && firstSlide.mediaType !== "video") {
+            const url = await getUrl({
+              path: `public/${firstSlide.mediaPath}`,
+              options: { validateObjectExistence: false, expiresIn: 86400 },
+            });
+            return url.url.toString();
+          }
+        }
+      } else if (config?.heroImagePaths && config.heroImagePaths.length > 0) {
+        const url = await getUrl({
+          path: `public/${config.heroImagePaths[0]}`,
+          options: { validateObjectExistence: false, expiresIn: 86400 },
+        });
+        return url.url.toString();
+      } else if (config?.heroImagePath) {
+        const url = await getUrl({
+          path: `public/${config.heroImagePath}`,
+          options: { validateObjectExistence: false, expiresIn: 86400 },
+        });
+        return url.url.toString();
+      }
+      return null;
+    };
+
     const fetchData = async () => {
       try {
-        // ユーザー情報を取得
         const user = await getCurrentUser();
         const attributes = await fetchUserAttributes();
         const familyName = attributes.family_name || "";
@@ -41,101 +77,54 @@ export default function AppDashboard() {
         setUserName(`${familyName} ${givenName}`.trim() || "会員");
         setGraduationYear(attributes["custom:graduationYear"] || "");
 
-        // 統計情報を取得
-        const [tweetsResult, favoritesResult, threadsResult] = await Promise.all([
-          models.Tweet.list({ limit: 1000 }),
-          models.Favorite.list({ limit: 1000 }),
-          models.BoardThread.list({ limit: 1000 }),
+        // 統計・お知らせ・背景画像を並列で取得（各々独立して失敗可能）
+        const [statsRes, newsRes, bgRes] = await Promise.allSettled([
+          Promise.all([
+            models.Tweet.list({ limit: 1000 }),
+            models.Favorite.list({ limit: 1000 }),
+            models.BoardThread.list({ limit: 1000 }),
+          ]),
+          models.News.list({ filter: { isPublished: { eq: true } } }),
+          loadBackgroundImage(),
         ]);
 
-        // 有効なツイート（非表示でないもの）をフィルタリング
-        const visibleTweets = tweetsResult.data?.filter((t) => !t.isHidden) || [];
-        const visibleTweetIds = new Set(visibleTweets.map((t) => t.id));
-
-        // メインツイート（リプライを除く）のみカウント（表示と一致させる）
-        const mainTweets = visibleTweets.filter((t) => !t.replyToId);
-
-        // 自分のお気に入りのみカウント（かつ有効なツイートへのもののみ）
-        const myValidFavorites = favoritesResult.data?.filter((fav) => {
-          // 自分のお気に入りかチェック（ownerまたはカスタムID形式で判定）
-          const isMyFavorite = fav.owner === user.userId ||
-            (fav.id && fav.id.includes('#') && fav.id.split('#')[1] === user.userId);
-          // 有効なツイートへのお気に入りかチェック
-          const isValidTweet = visibleTweetIds.has(fav.tweetId);
-          return isMyFavorite && isValidTweet;
-        }) || [];
-
-        setStats({
-          tweetCount: mainTweets.length,
-          favoriteCount: myValidFavorites.length,
-          threadCount: threadsResult.data?.length || 0,
-        });
-
-        // お知らせを取得
-        try {
-          const newsResult = await models.News.list({
-            filter: { isPublished: { eq: true } },
+        if (statsRes.status === "fulfilled") {
+          const [tweetsResult, favoritesResult, threadsResult] = statsRes.value;
+          const visibleTweets = tweetsResult.data?.filter((t) => !t.isHidden) || [];
+          const visibleTweetIds = new Set(visibleTweets.map((t) => t.id));
+          const mainTweets = visibleTweets.filter((t) => !t.replyToId);
+          const myValidFavorites = favoritesResult.data?.filter((fav) => {
+            const isMyFavorite =
+              fav.owner === user.userId ||
+              (fav.id && fav.id.includes("#") && fav.id.split("#")[1] === user.userId);
+            return isMyFavorite && visibleTweetIds.has(fav.tweetId);
+          }) || [];
+          setStats({
+            tweetCount: mainTweets.length,
+            favoriteCount: myValidFavorites.length,
+            threadCount: threadsResult.data?.length || 0,
           });
-          if (newsResult.data) {
-            const sorted = [...newsResult.data]
-              .sort((a, b) => {
-                if (a.isPinned && !b.isPinned) return -1;
-                if (!a.isPinned && b.isPinned) return 1;
-                return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
-              })
-              .slice(0, 5);
-            setNewsList(sorted);
-          }
-        } catch (newsError) {
-          console.error("Error loading news:", newsError);
         }
 
-        // 背景画像を取得（トップページと同じ画像を使用）
-        try {
-          const siteConfigResult = await models.SiteConfig.list({
-            filter: { isActive: { eq: true } },
-            limit: 1,
-          });
+        if (newsRes.status === "fulfilled" && newsRes.value.data) {
+          const sorted = [...newsRes.value.data]
+            .sort((a, b) => {
+              if (a.isPinned && !b.isPinned) return -1;
+              if (!a.isPinned && b.isPinned) return 1;
+              return (
+                new Date(b.publishedAt || b.createdAt).getTime() -
+                new Date(a.publishedAt || a.createdAt).getTime()
+              );
+            })
+            .slice(0, 5);
+          setNewsList(sorted);
+        }
 
-          const config = siteConfigResult.data?.[0] as SiteConfig | undefined;
-
-          if (config?.useHeroSlides) {
-            // HeroSlidesを使用している場合
-            const heroSlidesResult = await models.HeroSlide.list({
-              filter: { isActive: { eq: true } },
-            });
-            const slides = heroSlidesResult.data as HeroSlide[] | null;
-            if (slides && slides.length > 0) {
-              const sortedSlides = [...slides].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-              const firstSlide = sortedSlides[0];
-              if (firstSlide.mediaPath && firstSlide.mediaType !== 'video') {
-                const url = await getUrl({
-                  path: `public/${firstSlide.mediaPath}`,
-                  options: { validateObjectExistence: false, expiresIn: 86400 }
-                });
-                setBackgroundImage(url.url.toString());
-              }
-            }
-          } else if (config?.heroImagePaths && config.heroImagePaths.length > 0) {
-            // heroImagePathsを使用している場合
-            const url = await getUrl({
-              path: `public/${config.heroImagePaths[0]}`,
-              options: { validateObjectExistence: false, expiresIn: 86400 }
-            });
-            setBackgroundImage(url.url.toString());
-          } else if (config?.heroImagePath) {
-            // 単一のheroImagePathを使用している場合
-            const url = await getUrl({
-              path: `public/${config.heroImagePath}`,
-              options: { validateObjectExistence: false, expiresIn: 86400 }
-            });
-            setBackgroundImage(url.url.toString());
-          }
-        } catch (bgError) {
-          console.error("Error loading background image:", bgError);
+        if (bgRes.status === "fulfilled" && bgRes.value) {
+          setBackgroundImage(bgRes.value);
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Error fetching user info:", error);
       } finally {
         setLoading(false);
       }

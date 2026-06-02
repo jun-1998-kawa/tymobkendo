@@ -108,6 +108,16 @@ jest.mock('@/components/ui/Stagger', () => ({
   StaggerItem: ({ children }: any) => <div>{children}</div>,
 }));
 
+jest.mock('react-markdown', () => ({
+  __esModule: true,
+  default: ({ children }: any) => <div data-testid="markdown">{children}</div>,
+}));
+
+jest.mock('remark-gfm', () => ({
+  __esModule: true,
+  default: () => {},
+}));
+
 // Suppress console errors/warnings in tests
 global.console = {
   ...console,

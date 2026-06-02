@@ -276,15 +276,12 @@ function Header({ signOut, userEmail, user }: { signOut?: () => void; userEmail?
       <div className="mx-auto max-w-7xl px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo/Title */}
-          <Link
-            href="/app"
-            className="group flex items-center gap-2"
-          >
-            <span className="hidden text-base font-bold text-gray-900 sm:block">
+          <Link href="/app" className="flex items-center gap-2">
+            <span className="font-serif text-base font-bold text-gray-900">
               戸山剣道部<span className="text-accent-600">OB会</span>
             </span>
-            <span className="text-base font-bold text-gray-900 sm:hidden">
-              OB会
+            <span className="rounded bg-accent-50 px-1.5 py-0.5 text-xs font-medium text-accent-700">
+              会員
             </span>
           </Link>
 

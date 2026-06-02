@@ -1,117 +1,31 @@
 "use client";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import FadeIn from "@/components/ui/FadeIn";
-import { Stagger, StaggerItem } from "@/components/ui/Stagger";
+
+const adminLinks = [
+  { href: "/admin/news", title: "ニュース", description: "お知らせの投稿・編集" },
+  { href: "/admin/site-config", title: "サイト設定", description: "トップページのコンテンツ編集" },
+  { href: "/admin/hero-slides", title: "スライド", description: "ヒーロースライドショー管理" },
+  { href: "/admin/history", title: "歴史アーカイブ", description: "年表・歴史エントリ管理" },
+  { href: "/admin/invite-codes", title: "招待コード", description: "会員招待コードの発行・管理" },
+  { href: "/admin/pages", title: "ページ管理", description: "コンテンツページ編集" },
+];
 
 export default function AdminDashboard() {
-  const adminLinks = [
-    {
-      href: "/admin/site-config",
-      title: "サイト設定",
-      description: "トップページのコンテンツ編集",
-    },
-    {
-      href: "/admin/hero-slides",
-      title: "ヒーロースライド",
-      description: "スライドショー管理",
-    },
-    {
-      href: "/admin/news",
-      title: "ニュース",
-      description: "お知らせ投稿・編集",
-    },
-    {
-      href: "/admin/pages",
-      title: "ページ",
-      description: "コンテンツ編集",
-    },
-    {
-      href: "/admin/history",
-      title: "歴史",
-      description: "歴史アーカイブ管理",
-    },
-    {
-      href: "/admin/invite-codes",
-      title: "招待コード",
-      description: "招待コード発行・管理",
-    },
-    {
-      href: "/app/board",
-      title: "掲示板モデレーション",
-      description: "投稿監視・管理",
-    },
-  ];
-
   return (
-    <div className="mx-auto max-w-6xl space-y-12">
-      {/* Welcome Section */}
-      <FadeIn>
-        <div className="border-b border-gray-200 bg-white px-4 py-8">
-          <h1 className="text-2xl font-bold text-gray-900 md:text-3xl">
-            管理ダッシュボード
-          </h1>
-        </div>
-      </FadeIn>
-
-      {/* Quick Access Cards */}
-      <div className="px-4">
-        <FadeIn delay={0.2}>
-          <h2 className="mb-4 text-lg font-semibold text-gray-900">
-            管理メニュー
-          </h2>
-        </FadeIn>
-
-        <Stagger staggerDelay={0.15} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {adminLinks.map((link, index) => (
-            <StaggerItem key={link.href}>
-              <AdminCard {...link} delay={index * 0.1} />
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </div>
-
-      {/* Important Notice */}
-      <FadeIn delay={0.6}>
-        <div className="border border-orange-200 bg-orange-50 p-6 mx-4">
-          <div className="flex items-start gap-4">
-            <div>
-              <h3 className="mb-2 text-base font-semibold text-gray-900">
-                注意事項
+    <div className="mx-auto max-w-4xl">
+      <h1 className="mb-6 text-xl font-bold text-gray-900">管理メニュー</h1>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {adminLinks.map((link) => (
+          <Link key={link.href} href={link.href}>
+            <div className="group border border-gray-200 bg-white p-5 transition-colors hover:border-accent-200 hover:bg-accent-50/30">
+              <h3 className="mb-1 text-sm font-semibold text-gray-900 group-hover:text-accent-700">
+                {link.title}
               </h3>
-              <ul className="space-y-1 text-sm text-gray-700">
-                <li>• コンテンツ公開前に内容を確認</li>
-                <li>• 個人情報の取り扱いに注意</li>
-                <li>• 削除データは復元不可</li>
-                <li>• 投稿削除は慎重に判断</li>
-              </ul>
+              <p className="text-xs text-gray-500">{link.description}</p>
             </div>
-          </div>
-        </div>
-      </FadeIn>
-    </div>
-  );
-}
-
-function AdminCard({
-  href,
-  title,
-  description,
-  delay = 0,
-}: {
-  href: string;
-  title: string;
-  description: string;
-  delay?: number;
-}) {
-  return (
-    <Link href={href}>
-      <div className="border border-gray-200 bg-white p-6 transition-colors hover:bg-gray-50">
-        <h3 className="mb-2 text-base font-semibold text-gray-900">
-          {title}
-        </h3>
-        <p className="text-sm text-gray-600">{description}</p>
+          </Link>
+        ))}
       </div>
-    </Link>
+    </div>
   );
 }

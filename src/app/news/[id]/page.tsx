@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { generateClient } from "aws-amplify/data";
 import { getUrl } from "aws-amplify/storage";
-import { Amplify } from "aws-amplify";
 import Link from "next/link";
 import Image from "next/image";
 import ReactMarkdown from "react-markdown";
@@ -11,7 +10,6 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
-import outputs from "../../../../amplify_outputs.json";
 
 export default function NewsDetailPage() {
   const params = useParams();
@@ -26,25 +24,27 @@ export default function NewsDetailPage() {
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // Configure Amplify
-        Amplify.configure(outputs, { ssr: true });
-
-        // 少し待機してからクライアントを生成（Amplifyの設定が完全に完了するまで）
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        // ゲストアクセス用のクライアント (Cognito Identity Pool guest 経由の IAM 認証)
-        const client = generateClient({
-          authMode: 'identityPool'
-        });
-        const models = client.models as any;
-
-        if (!models.News) {
-          setError("News model not available");
-          setLoading(false);
-          return;
+        // ログイン状態に応じてauthModeを切り替える
+        // ログイン済み → userPool（Cognito User Poolの認証）
+        // 未ログイン  → identityPool（Cognito Identity Poolのゲスト認証）
+        let authMode: "userPool" | "identityPool" = "identityPool";
+        try {
+          const { getCurrentUser } = await import("aws-amplify/auth");
+          await getCurrentUser();
+          authMode = "userPool";
+        } catch {
+          // 未ログイン → identityPool のまま
         }
 
+        const client = generateClient({ authMode });
+        const models = client.models as any;
+
         const result = await models.News.get({ id: newsId });
+
+        // エラーがあれば詳細をログに出してデバッグしやすくする
+        if (result.errors && result.errors.length > 0) {
+          console.error("News fetch errors:", result.errors);
+        }
 
         if (!result.data) {
           setError("ニュースが見つかりません");

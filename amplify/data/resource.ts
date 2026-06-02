@@ -86,6 +86,9 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.guest().to(["read"]), // 未ログインユーザーは Identity Pool guest credentials で read
+      // ログイン中のユーザーが公開ページ（identityPool authMode）から読む場合は
+      // IAM の認証済みロールになるため、明示的に read を許可する。
+      allow.authenticated("identityPool").to(["read"]),
       allow.groups(["MEMBERS"]).to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
@@ -106,6 +109,8 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
+      // 公開ページ（identityPool authMode）からログイン中ユーザーが読む場合用
+      allow.authenticated("identityPool").to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
@@ -123,6 +128,8 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
+      // 公開ページ（identityPool authMode）からログイン中ユーザーが読む場合用
+      allow.authenticated("identityPool").to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 
@@ -175,6 +182,8 @@ const schema = a.schema({
     .authorization((allow) => [
       allow.guest().to(["read"]),
       allow.authenticated().to(["read"]),
+      // 公開ページ（identityPool authMode）からログイン中ユーザーが読む場合用
+      allow.authenticated("identityPool").to(["read"]),
       allow.groups(["ADMINS"]).to(["create", "update", "delete"]),
     ]),
 

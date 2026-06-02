@@ -290,12 +290,147 @@ npm run typecheck
 # ビルド
 npm run build
 
-# テスト
+# テスト（1回実行）
 npm run test
+
+# テスト（ウォッチ＝TDD推奨）
+npm run test:watch
+
+# カバレッジ計測（しきい値70%）
+npm run test:coverage
 ```
 
 
-## 6. CI/CD（GitHub連携）
+## 6. TDD 開発フロー（テスト駆動開発）
+
+このプロジェクトは **テスト駆動開発（TDD）を標準フロー** とする。新機能の追加・既存ロジックの変更・バグ修正はすべて、原則として **テストを先に書いてから実装** する。
+
+### 6.0 大原則
+
+- **テストを書かずに実装コードを書き始めない。** まず「期待する振る舞い」をテストで表現する。
+- **小さく回す。** 1つの振る舞い → 失敗するテスト → 最小実装 → リファクタ、を細かく繰り返す。
+- **テストは仕様書。** テスト名（`it`/`test` の説明）は日本語で「何ができるべきか」を述べる。
+- **CI が緑であることを完了条件とする。** `typecheck` / `lint` / `test` がすべて通って初めて「実装完了」。
+
+### 6.1 Red → Green → Refactor サイクル
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ 1. RED   : 失敗するテストを書く                          │
+│            ・期待する振る舞いを1つだけテストに書く       │
+│            ・`npm run test:watch` で「赤」を確認する     │
+│            ・テストが失敗する理由が正しいことを確認      │
+│                          ↓                              │
+│ 2. GREEN : テストを通す最小限の実装を書く                │
+│            ・とにかく緑にすることを優先（雑でよい）      │
+│            ・余計な実装・将来用の汎用化はしない          │
+│                          ↓                              │
+│ 3. REFACTOR : 緑を保ったまま整理する                     │
+│            ・重複除去・命名改善・型の厳密化              │
+│            ・テストが緑のままであることを都度確認        │
+│            ・必要なら型チェック/lintも実行              │
+└─────────────────────────────────────────────────────────┘
+        ↑__________________ 次の振る舞いへ ________________│
+```
+
+### 6.2 具体的な手順（Claude Code が従う手順）
+
+1. **要件を振る舞いに分解する。** 「○○できる」「○○のときエラーになる」など、テスト可能な単位に箇条書きする。
+2. **テストファイルを作成/追記する。**
+   - 配置: 対象コードと同階層の `__tests__/` ディレクトリ（例: `src/app/app/tweet/__tests__/page.test.tsx`）。
+   - 命名: `*.test.ts` / `*.test.tsx`。
+3. **RED:** `npm run test:watch` を起動し、新しいテストが **失敗する** ことを確認する。
+4. **GREEN:** 実装コードを書き、対象テストを通す。
+5. **REFACTOR:** テストを緑に保ったままコードを整理する。
+6. **回帰確認:** `npm run test` で全テストを実行し、既存テストを壊していないか確認する。
+7. **仕上げ:** `npm run typecheck` と `npm run lint` を実行して緑にする。
+8. **カバレッジ確認（必要に応じて）:** `npm run test:coverage`。グローバルしきい値は **70%**（`jest.config.ts` の `coverageThreshold`）。下回る変更は原則マージしない。
+
+### 6.3 テストの書き方（このリポジトリの規約）
+
+- **フレームワーク:** Jest + React Testing Library（`@testing-library/react` / `user-event`）。設定は `jest.config.ts`、共通モックは `jest.setup.tsx`。
+- **ユーザー視点で検証する。** `getByRole` / `getByText` / `findBy*` を優先し、実装詳細（内部 state や class 名）に依存しない。
+- **Amplify は常にモックする。** `jest.setup.tsx` で `aws-amplify` / `aws-amplify/data` / `aws-amplify/storage` / `aws-amplify/auth` をモック済み。各テストでは `generateClient` の `models.*`（`observeQuery` / `create` / `update` / `delete`）をケースごとに上書きする。
+- **`amplify_outputs.json` はモックに差し替え済み**（`src/test-utils/amplifyOutputsMock.json`）。テスト内で本物を読み込まない。
+- **非同期 UI は `findBy*` / `waitFor` で待つ。** `observeQuery` の購読は `subscribe` のコールバックに `next({ items: [...] })` を渡して初期データを流すパターンを踏襲する。
+- **後始末:** `beforeEach` で `jest.clearAllMocks()`。購読の `unsubscribe` が呼ばれることもテスト対象にしてよい。
+- **AAA で書く:** Arrange（準備・モック設定）→ Act（描画・操作）→ Assert（検証）。
+
+#### テストの雛形（コンポーネント）
+```tsx
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { generateClient } from 'aws-amplify/data';
+import TargetPage from '../page';
+
+jest.mock('aws-amplify/data');
+const mockGenerateClient = generateClient as jest.MockedFunction<typeof generateClient>;
+
+describe('対象機能', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGenerateClient.mockReturnValue({
+      models: {
+        Tweet: {
+          observeQuery: jest.fn().mockReturnValue({
+            subscribe: (cb: any) => {
+              setTimeout(() => cb.next({ items: [] }), 0);
+              return { unsubscribe: jest.fn() };
+            },
+          }),
+          create: jest.fn().mockResolvedValue({ data: { id: 'x' } }),
+        },
+      },
+    } as any);
+  });
+
+  it('140文字を超える投稿はできない', async () => {
+    // Arrange
+    render(<TargetPage />);
+    // Act
+    await userEvent.type(screen.getByRole('textbox'), 'あ'.repeat(141));
+    // Assert
+    expect(screen.getByRole('button', { name: /投稿/ })).toBeDisabled();
+  });
+});
+```
+
+#### テストの雛形（純粋関数 / hook）
+```ts
+import { formatDate } from '@/utils/dateFormatter';
+
+describe('formatDate', () => {
+  it('ISO文字列を日本語表記に変換する', () => {
+    expect(formatDate('2026-06-02T00:00:00Z')).toBe('2026年6月2日');
+  });
+});
+```
+
+### 6.4 バグ修正の TDD
+
+1. **まずバグを再現する失敗テストを書く**（修正前は必ず赤になることを確認）。
+2. 修正を入れてテストを緑にする。
+3. そのテストは回帰防止として残す。
+
+### 6.5 不変条件（必ずテストで守る項目）
+
+実装変更時、以下のドメイン不変条件はテストで担保すること（`§2.4` / `§7` 参照）:
+
+- Tweet 本文は **140文字** を超えて投稿できない。
+- 自分の投稿のみ編集・削除でき、他者の投稿の削除・`isHidden` 化は **ADMINS のみ**。
+- CMS（News / Page / HistoryEntry / SiteConfig / HeroSlide）の更新は **ADMINS のみ**。
+- 招待コードが無効/未入力の場合はサインアップが拒否される（`pre-sign-up` ハンドラ）。
+
+### 6.6 完了の定義（Definition of Done）
+
+- [ ] 追加/変更した振る舞いに対応するテストがある
+- [ ] `npm run test` が全件パス
+- [ ] `npm run typecheck` がパス
+- [ ] `npm run lint` がパス
+- [ ] カバレッジがしきい値（70%）を下回っていない
+
+
+## 7. CI/CD（GitHub連携）
 
 ### `amplify.yml`
 ```yaml
@@ -325,7 +460,7 @@ frontend:
 - PRクローズで自動削除
 
 
-## 7. 権限とモデレーション
+## 8. 権限とモデレーション
 
 | 操作 | 一般会員 | 管理者(ADMINS) |
 |------|----------|----------------|
@@ -338,7 +473,7 @@ frontend:
 | 招待コード変更 | × | ○（デプロイ要） |
 
 
-## 8. 今後の拡張候補
+## 9. 今後の拡張候補
 
 - [ ] 招待コードのDB管理化（管理画面から変更可能に）
 - [ ] 画像のライフサイクル管理（不要オブジェクト削除Lambda）

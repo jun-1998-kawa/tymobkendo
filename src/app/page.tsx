@@ -9,6 +9,7 @@ import { getUrl } from "aws-amplify/storage";
 import HeroNavigation from "@/components/HeroNavigation";
 import ShinaiSlash from "@/components/ShinaiSlash";
 import type { SiteConfig, HeroSlide, News } from "@/lib/amplifyClient";
+import { resolvePublicAuthMode } from "@/lib/publicAuthMode";
 import outputs from "../../amplify_outputs.json";
 
 interface SlideData {
@@ -49,8 +50,11 @@ export default function Home() {
         Amplify.configure(outputs, { ssr: true });
         setAmplifyReady(true);
 
-        // 未ログインユーザーは Cognito Identity Pool の guest credentials で IAM 認証
-        const client = generateClient({ authMode: 'identityPool' });
+        // 未ログインは Identity Pool guest(IAM)、ログイン中は User Pool で読む。
+        // ログイン中に identityPool を使うとグループ用 IAM ロールに解決され、
+        // AppSync 権限不足で 401 になるため authMode を動的に切り替える。
+        const authMode = await resolvePublicAuthMode();
+        const client = generateClient({ authMode });
         const models = client.models as {
           SiteConfig: { list: (options?: unknown) => Promise<{ data: SiteConfig[] | null }> };
           HeroSlide: { list: (options?: unknown) => Promise<{ data: HeroSlide[] | null }> };

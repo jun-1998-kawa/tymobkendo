@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 import type { News } from "@/lib/amplifyClient";
+import { resolvePublicAuthMode } from "@/lib/publicAuthMode";
 import outputs from "../../amplify_outputs.json";
 
 export default function NewsSection() {
@@ -23,10 +24,11 @@ export default function NewsSection() {
         // 少し待機してからクライアントを生成（Amplifyの設定が完全に完了するまで）
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        // ゲストアクセス用のクライアント (Cognito Identity Pool guest 経由の IAM 認証)
-        const client = generateClient({
-          authMode: 'identityPool'
-        });
+        // 未ログインは Identity Pool guest(IAM)、ログイン中は User Pool で読む。
+        // ログイン中に identityPool を使うとグループ用 IAM ロールに解決され、
+        // AppSync 権限不足で 401 になるため authMode を動的に切り替える。
+        const authMode = await resolvePublicAuthMode();
+        const client = generateClient({ authMode });
         const models = client.models as {
           News: {
             observeQuery: (options?: unknown) => {

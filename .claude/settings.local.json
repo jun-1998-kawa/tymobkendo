@@ -29,6 +29,7 @@
       "WebFetch(domain:github.com)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "defaultMode": "acceptEdits"
   }
 }

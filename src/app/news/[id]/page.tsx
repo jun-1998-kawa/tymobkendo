@@ -11,6 +11,8 @@ import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import FadeIn from "@/components/ui/FadeIn";
 import SlideIn from "@/components/ui/SlideIn";
+import { ReactionsProvider } from "@/components/reactions/ReactionsProvider";
+import ReactionBar from "@/components/reactions/ReactionBar";
 import outputs from "../../../../amplify_outputs.json";
 
 export default function NewsDetailPage() {
@@ -305,6 +307,13 @@ export default function NewsDetailPage() {
             </div>
           </div>
         </SlideIn>
+
+        {/* Reactions（会員のみ表示・操作可。ゲストには表示されない） */}
+        <ReactionsProvider>
+          <div className="mt-10 flex justify-center">
+            <ReactionBar targetType="News" targetId={news.id} />
+          </div>
+        </ReactionsProvider>
 
         {/* Footer CTA */}
         <SlideIn direction="up" delay={imageUrls.length > 0 ? 0.6 : 0.4}>

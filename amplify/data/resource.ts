@@ -29,6 +29,22 @@ const schema = a.schema({
       allow.owner().to(["delete"]), // 自分のいいねは削除可能
     ]),
 
+  // Reaction（汎用リアクション：絵文字）
+  // 対象を targetType + targetId で参照するため、特定モデルに依存しない（直交）。
+  // ID を `${targetType}#${targetId}#${emoji}#${userId}` にすることで
+  // 同一ユーザーの重複リアクションを構造的に防ぐ。
+  Reaction: a
+    .model({
+      targetType: a.string().required(), // 対象モデル名（例: "HistoryEntry"）
+      targetId: a.id().required(), // 対象レコードの ID
+      emoji: a.string().required(), // リアクション絵文字
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(["create", "read"]),
+      allow.owner().to(["delete"]), // 自分のリアクションは取り消し可能
+      allow.groups(["ADMINS"]).to(["delete"]), // 管理者は強制削除可
+    ]),
+
   // 掲示板スレッド
   BoardThread: a
     .model({

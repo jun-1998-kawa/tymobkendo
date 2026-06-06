@@ -57,6 +57,22 @@ export interface Favorite {
 }
 
 /**
+ * Reaction - リアクション（汎用：対象を targetType+targetId で参照）
+ *
+ * 特定モデルに依存しないため、HistoryEntry / Tweet / News など
+ * あらゆるコンテンツに同じ仕組みで絵文字リアクションを付けられる。
+ */
+export interface Reaction {
+  id: string;
+  targetType: string; // 対象モデル名（例: "HistoryEntry"）
+  targetId: string; // 対象レコードの ID
+  emoji: string; // リアクション絵文字
+  owner?: string | null; // Cognito sub（AppSync が付与）
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
  * BoardThread - 掲示板スレッド
  */
 export interface BoardThread {
@@ -181,6 +197,7 @@ export interface SiteConfig {
 interface Models {
   Tweet: ModelOperations<Tweet>;
   Favorite: ModelOperations<Favorite>;
+  Reaction: ModelOperations<Reaction>;
   BoardThread: ModelOperations<BoardThread>;
   BoardMessage: ModelOperations<BoardMessage>;
   HistoryEntry: ModelOperations<HistoryEntry>;

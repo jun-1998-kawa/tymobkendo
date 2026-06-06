@@ -9,6 +9,7 @@ import SlideIn from "@/components/ui/SlideIn";
 import { Stagger, StaggerItem } from "@/components/ui/Stagger";
 import { models } from "@/lib/amplifyClient";
 import type { HistoryEntry } from "@/lib/amplifyClient";
+import ReactionBar from "@/components/reactions/ReactionBar";
 
 export default function HistoryPage() {
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
@@ -321,6 +322,11 @@ function HistoryCard({ entry, isPrivate }: { entry: HistoryEntry; isPrivate: boo
             </button>
           </div>
         )}
+
+        {/* Reactions */}
+        <div className="mt-6 border-t border-white/70 pt-4">
+          <ReactionBar targetType="HistoryEntry" targetId={entry.id} />
+        </div>
       </div>
 
       {/* Hover Effect Background */}

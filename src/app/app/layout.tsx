@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, useMemo, useRef } from "react";
 import { fetchAuthSession } from "aws-amplify/auth";
 import { useTabVisibility } from "@/hooks/useTabVisibility";
+import { ReactionsProvider } from "@/components/reactions/ReactionsProvider";
 
 // Authenticator form fields configuration
 const formFields = {
@@ -199,7 +200,9 @@ export default function MembersLayout({ children }: { children: React.ReactNode 
         return (
           <div className="flex min-h-screen flex-col bg-gradient-to-b from-gray-50 to-white">
             <Header signOut={signOut} userEmail={user?.signInDetails?.loginId} user={user} />
-            <main className="flex-1 px-4 pb-20 pt-6 md:px-8 md:pb-8">{children}</main>
+            <main className="flex-1 px-4 pb-20 pt-6 md:px-8 md:pb-8">
+              <ReactionsProvider>{children}</ReactionsProvider>
+            </main>
             <Footer />
           </div>
         );
